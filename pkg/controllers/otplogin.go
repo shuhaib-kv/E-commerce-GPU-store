@@ -28,9 +28,9 @@ var (
 )
 
 func OtpLog(c *gin.Context) {
-	accountSid = os.Getenv("ACCOUNT_SID")
-	authToken = os.Getenv("AUTH_TOCKEN")
-	fromPhone = os.Getenv("SID")
+	accountSid = "AC9a2a6f6da0ce168970d9bd4bc4d743f5"
+	authToken = "0c02c5cc1a62aad610f48905301d2bce"
+	fromPhone = "VAadb071310682edc5612f093309ff3e6d"
 	client = twilio.NewRestClientWithParams(twilio.ClientParams{
 		Username: accountSid,
 		Password: authToken,
