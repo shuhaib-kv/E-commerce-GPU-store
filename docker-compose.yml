@@ -3,30 +3,38 @@ services:
   db:
     image: postgres:12.2-alpine
     container_name: "database"
+    environment:
+      - POSTGRES_USER=${DB_USER}  
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+      - DATABASE_HOST=${DB_HOST} 
     ports:
-      -"5432:5432"
-    enviroment:
-      -POSTGRES_DB=postgres
-      -POSTGRES_USER=postgres
-      -POSTGRES_PASSWORD=postgres
+      - "5432:5433"
+  
     networks:
-      -fullstack
+      - fullstack
     volumes:
-      -database_postgres:/var/lib/postgres/database
+      - database_postgres:/var/lib/postgres/data
 
-    app:
-      container_name: e-com
-      build: .
-      ports: 
-        - 8080:8080 
-      restart: on-failure
-      volumes:
-        - api:/usr/src/app/
+  app:
+    container_name: e-com
+    build: .
+    ports: 
+      - 8080:8080 
+    restart: on-failure
+    volumes:
+      - api:/usr/src/app/
 
-      depends_on:
-        - fullstack-database          
-      networks:
-        - fullstack
-      command: sh -c "/wait && ./main" 
-      environment:
-        - WAIT_HOSTS=fullstack-database:5432
+    depends_on:
+      - db       
+    networks:
+      - fullstack
+    command: sh -c "/wait && ./main" 
+    environment:
+      - WAIT_HOSTS=fullstack-database:5432
+volumes:
+  api:
+  database_postgres:   
+networks:
+  fullstack:
+    driver: bridge
