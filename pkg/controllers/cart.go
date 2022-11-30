@@ -186,9 +186,9 @@ func CartList(c *gin.Context) {
 	}
 	database.Db.Select("id", "product_id", "product_name", "brand_name", "description", "price", "quantity", "total").Table("carts").Where("user_id=?", UsersID).Find(&cart)
 
-	c.JSON(200, gin.H{
-		"Products": cart,
-	})
+	// c.JSON(200, gin.H{
+
+	// })
 
 	for _, i := range cart {
 		sum := i.Total
@@ -196,6 +196,7 @@ func CartList(c *gin.Context) {
 	}
 	c.JSON(200, gin.H{
 		"status":   true,
+		"Products": cart,
 		"Subtotal": Subtotal,
 	})
 
@@ -279,7 +280,7 @@ func CheckoutCart(c *gin.Context) {
 	})
 	if balance == 0 {
 		c.JSON(200, gin.H{
-			"Balance is zero": "",
+			"Balance is zero": "00",
 		})
 	} else {
 		if wallet == "apply" {
