@@ -1,12 +1,17 @@
-FROM golang:1.12.0-alpine3.9
-RUN mkdir /e-com
-ADD . /e-com
-COPY go.mod ./
-COPY go.sum ./
-RUN go mod download
-COPY *.go ./
+FROM golang:alpine as builder
+WORKDIR /E-Commerce-Project
 
-RUN go build -o /docker-gs-ping
-WORKDIR /e-com
-RUN go build -o main .
-CMD ["/E-com/main"]
+COPY go.mod .
+COPY go.sum .
+RUN go mod download
+COPY . .
+RUN  go build -o ecom main.go
+
+FROM alpine:latest
+
+WORKDIR /root
+COPY --from=builder /E-Commerce-Project/ecom .
+COPY . .
+EXPOSE 8080
+CMD ["./ecom"]
+
