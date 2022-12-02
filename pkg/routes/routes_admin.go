@@ -35,8 +35,8 @@ func AdminRoutes(Admin *gin.Engine) {
 	//cart
 	//paymentmethod
 	Admin.POST("/admin/paymentmethod", middleware.AdminAuth(), controllers.AddPaymentMethod)
-	// Admin.GET("/admin/order/view", middleware.AdminAuth(), controllers.ViewOrders)
-	// Admin.PATCH("/admin/order/update/:id", middleware.AdminAuth(), controllers.EditOrder)
+	Admin.GET("/admin/order/view", middleware.AdminAuth(), controllers.ViewOrders)
+	Admin.PATCH("/admin/order/update/:id", middleware.AdminAuth(), controllers.EditOrder)
 	Admin.GET("/admin/list/coupons", middleware.AdminAuth(), controllers.ListCoupons)
 	Admin.GET("/admin/list/discounts", middleware.AdminAuth(), controllers.ListDiscount)
 	Admin.POST("/admin/add/coupon", middleware.AdminAuth(), controllers.AddCoupon)
