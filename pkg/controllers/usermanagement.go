@@ -26,7 +26,6 @@ func ViewUsers(c *gin.Context) {
 	}
 }
 func BlockUser(c *gin.Context) {
-
 	var user models.Users
 	var updateStatus bool = true
 	id := c.Param("id")

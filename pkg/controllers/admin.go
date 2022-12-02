@@ -33,19 +33,23 @@ func AdminSignup(c *gin.Context) {
 }
 
 func AdminLogin(c *gin.Context) {
-	Email := c.PostForm("email")
-	Password := c.PostForm("password")
+
+	var body struct {
+		Email    string `json:"productsid"`
+		Password string `json:"quantity"`
+	}
+	c.Bind(&body)
 	var admin models.Admin
-	database.Db.First(&admin, "email = ?", Email)
+	database.Db.First(&admin, "email = ?", body.Email)
 
 	database.Db.Find(&admin)
-	if admin.Password != Password {
+	if admin.Password != body.Password {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"status":  false,
 			"message": "Incorrect Password",
 		})
 	}
-	tokenstring, err := middleware.GenerateJWT(Email,int(admin.ID))
+	tokenstring, err := middleware.GenerateJWT(body.Email, int(admin.ID))
 	c.SetCookie("Adminjwt", tokenstring, 3600*24*30, "", "", false, true)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
