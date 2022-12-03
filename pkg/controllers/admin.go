@@ -35,8 +35,8 @@ func AdminSignup(c *gin.Context) {
 func AdminLogin(c *gin.Context) {
 
 	var body struct {
-		Email    string `json:"productsid"`
-		Password string `json:"quantity"`
+		Email    string `json:"email"`
+		Password string `json:"password"`
 	}
 	c.Bind(&body)
 	var admin models.Admin
