@@ -7,7 +7,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
+	"github.com/urfave/negroni"
 )
+
 var vp = viper.New()
 var app = gin.Default()
 
@@ -15,14 +17,15 @@ func init() {
 	database.ConnectDB()
 	initializers.LoadEnvVariables()
 	app.LoadHTMLGlob("templates/*.html")
-	
+
 	vp.SetConfigName(".env")
 	vp.AddConfigPath(".")
 	err := vp.ReadInConfig()
 	if err != nil {
 		print(err)
 	}
-	
+	n := negroni.Classic()
+	n.UseHandler(app)
 	// dsn := os.Getenv("REDIS_DSN")
 	//
 	//	if len(dsn) == 0 {
