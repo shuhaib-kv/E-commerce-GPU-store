@@ -37,15 +37,14 @@ func AdminLogin(c *gin.Context) {
 	Password := c.PostForm("password")
 	var admin models.Admin
 	database.Db.First(&admin, "email = ?", Email)
-
+	e := middleware.Falseresponce("wrong user", [])
 	database.Db.Find(&admin)
 	if admin.Password != Password {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"status":  false,
-			"message": "Incorrect Password",
+			"responce": e,
 		})
 	}
-	tokenstring, err := middleware.GenerateJWT(Email,int(admin.ID))
+	tokenstring, err := middleware.GenerateJWT(Email, int(admin.ID))
 	c.SetCookie("Adminjwt", tokenstring, 3600*24*30, "", "", false, true)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
