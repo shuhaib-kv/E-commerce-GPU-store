@@ -37,7 +37,7 @@ func AdminLogin(c *gin.Context) {
 	Password := c.PostForm("password")
 	var admin models.Admin
 	database.Db.First(&admin, "email = ?", Email)
-	e := middleware.Falseresponce("wrong user", [])
+	e := middleware.Falseresponce("wrong user")
 	database.Db.Find(&admin)
 	if admin.Password != Password {
 		c.JSON(http.StatusBadRequest, gin.H{
