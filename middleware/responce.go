@@ -1,16 +1,16 @@
 package middleware
 
 type Responses struct {
-	StatusCode bool   `json:"statusCode"`
+	StatusCode bool `json:"statusCode"`
 
-	Body       string `json:"body"`
+	Body string `json:"body"`
 }
 
 func Truersponce(s string) Responses {
 	t := Responses{
 		StatusCode: true,
-		
-		Body:       s,
+
+		Body: s,
 	}
 	return t
 }
