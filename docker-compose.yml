@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   db:
-    image: postgres:12.2-alpine
+    image: postgres:latest
     container_name: "database"
     environment:
       - POSTGRES_USER=${DB_USER}  
