@@ -1,23 +1,33 @@
 package middleware
 
-type Responses struct {
-	StatusCode bool `json:"statusCode"`
+import "strings"
 
-	Body string `json:"body"`
+type Response struct {
+	Status  bool        `json:"status"`
+	Message string      `json:"message"`
+	Errors  interface{} `json:"errors,omitempty"`
+	Data    interface{} `json:"data,omitempty"`
 }
 
-func Truersponce(s string) Responses {
-	t := Responses{
-		StatusCode: true,
-
-		Body: s,
+// SuccessResponse method is used to inject data value to dynamic success response
+func SuccessResponse(status bool, message string, data interface{}) Response {
+	res := Response{
+		Status:  status,
+		Message: message,
+		Errors:  nil,
+		Data:    data,
 	}
-	return t
+	return res
 }
-func Falseresponce(s string) Responses {
-	t := Responses{
-		StatusCode: false,
-		Body:       s,
+
+// ErrorResponse method is used to inject data value to dynamic failed response
+func ErrorResponse(message string, err string, data interface{}) Response {
+	splittedError := strings.Split(err, "\n")
+	res := Response{
+		Status:  false,
+		Message: message,
+		Errors:  splittedError,
+		Data:    data,
 	}
-	return t
+	return res
 }
