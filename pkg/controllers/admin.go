@@ -40,22 +40,16 @@ func AdminLogin(c *gin.Context) {
 	}
 	c.Bind(&body)
 	var admin models.Admin
-<<<<<<< HEAD
+
 	database.Db.First(&admin, "email = ?", body.Email)
 
-=======
-	database.Db.First(&admin, "email = ?", Email)
-
->>>>>>> docker
 	database.Db.Find(&admin)
 	if admin.Password != body.Password {
-		c.JSON(http.StatusBadRequest, gin.H{"":""})
+		c.JSON(http.StatusBadRequest, gin.H{"": ""})
 	}
-<<<<<<< HEAD
+
 	tokenstring, err := middleware.GenerateJWT(body.Email, int(admin.ID))
-=======
-	tokenstring, err := middleware.GenerateJWT(Email, int(admin.ID))
->>>>>>> docker
+
 	c.SetCookie("Adminjwt", tokenstring, 3600*24*30, "", "", false, true)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
