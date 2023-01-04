@@ -45,13 +45,11 @@ func AdminLogin(c *gin.Context) {
 
 =======
 	database.Db.First(&admin, "email = ?", Email)
-	e := middleware.Falseresponce("wrong user")
+
 >>>>>>> docker
 	database.Db.Find(&admin)
 	if admin.Password != body.Password {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"responce": e,
-		})
+		c.JSON(http.StatusBadRequest, gin.H{"":""})
 	}
 <<<<<<< HEAD
 	tokenstring, err := middleware.GenerateJWT(body.Email, int(admin.ID))
