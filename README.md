@@ -1,6 +1,6 @@
 # E-commerce-GPU-store
 
-GPU Ecom is a  backend web application project which provides all the important parts of E-Commerce and included many feautures that potentialy improved the whole project . This project  is entirely dockerized and deployedinto a AWS EC2 Server.
+GPU Ecom is a  backend web application project which provides all the important parts of E-Commerce and included many feautures that potentialy improved the whole project . This project  is entirely dockerized and deployed into a AWS EC2 Server.
 
 
 ## Authors
