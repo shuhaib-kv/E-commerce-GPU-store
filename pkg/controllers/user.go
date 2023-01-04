@@ -72,7 +72,7 @@ func UserSignUp(c *gin.Context) {
 		"message": "Account Created",
 	})
 	var users models.Users
-	database.Db.First(&users, "email = ?", Email)
+	// database.Db.First(&users, "email = ?", Email)
 	wallet := models.Wallet{UsersID: users.ID, Balance: 0}
 	database.Db.Create(&wallet)
 
