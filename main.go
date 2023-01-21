@@ -13,9 +13,9 @@ var vp = viper.New()
 var app = gin.Default()
 
 func init() {
-	database.ConnectDB()
 	initializers.LoadEnvVariables()
 	app.LoadHTMLGlob("templates/*.html")
+	database.ConnectDB()
 
 	// vp.SetConfigName(".env")
 	// vp.AddConfigPath(".")
@@ -45,6 +45,8 @@ func init() {
 func main() {
 
 	// app.Use(gin.Logger())
+	database.ConnectDB()
+
 	routes.UserRoutes(app)
 	routes.AdminRoutes(app)
 	app.Run() // Port Declaration to serve the routes
