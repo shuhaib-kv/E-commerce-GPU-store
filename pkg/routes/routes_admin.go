@@ -32,11 +32,12 @@ func AdminRoutes(Admin *gin.Engine) {
 	Admin.PATCH("/admin/product/edit/:id", middleware.AdminAuth(), controllers.EditProduct)
 	Admin.DELETE("/admin/product/delete/:id", middleware.AdminAuth(), controllers.DeleteProduct)
 
-	//cart
 	//paymentmethod
 	Admin.POST("/admin/paymentmethod", middleware.AdminAuth(), controllers.AddPaymentMethod)
+	//order management
 	Admin.GET("/admin/order/view", middleware.AdminAuth(), controllers.ViewOrders)
 	Admin.PATCH("/admin/order/update/:id", middleware.AdminAuth(), controllers.EditOrder)
+	//coupen and discount
 	Admin.GET("/admin/list/coupons", middleware.AdminAuth(), controllers.ListCoupons)
 	Admin.GET("/admin/list/discounts", middleware.AdminAuth(), controllers.ListDiscount)
 	Admin.POST("/admin/add/coupon", middleware.AdminAuth(), controllers.AddCoupon)

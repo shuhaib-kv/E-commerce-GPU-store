@@ -31,7 +31,7 @@ func UserRoutes(User *gin.Engine) {
 	User.GET("/razorpay", middleware.UserAuth(), controllers.RazorPay)
 	User.GET("/success", controllers.Success)
 	//ordernow
-	User.POST("/cart/add", middleware.UserAuth(), controllers.AddTOcart) //new
+	User.POST("/cart/add", middleware.UserAuth(), controllers.AddTOcart)
 	User.GET("/user/cart/view", middleware.UserAuth(), controllers.CartList)
 
 	User.POST("/chechout", middleware.UserAuth(), controllers.CheckoutCart)
