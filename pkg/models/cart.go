@@ -5,32 +5,32 @@ import "gorm.io/gorm"
 type Cart struct {
 	gorm.Model
 
-	Product_ID    int
-	User_id       int
-	Product_Name  string
-	Brand_Name    string
-	Description   string
-	Quantity      int
-	Price         int
-	DiscountPrice int
-	Total         int
+	Product_ID    int`json:""`
+	User_id       int`json:""`
+	Product_Name  string`json:""`
+	Brand_Name    string`json:""`
+	Description   string`json:""`
+	Quantity      int`json:""`
+	Price         int`json:""`
+	DiscountPrice int`json:""`
+	Total         int`json:""`
 }
 type CartInfo struct {
 	gorm.Model
-	UsersId      int
-	ProductsID   int
-	Discount     int
-	ProductName  string
-	BrandName    string
-	ProductPrice int
+	UsersId      int`json:""`
+	ProductsID   int`json:""`
+	Discount     int`json:""`
+	ProductName  string`json:""`
+	BrandName    string`json:""`
+	ProductPrice int`json:""`
 }
 type Checkoutinfo struct {
 	gorm.Model
-	UsersID        int
-	OrderID        string
-	Discount       int
-	CouponDiscount int
-	CouponCode     string
-	TotalMrp       int
-	Total          int
+	UsersID        int`json:""`
+	OrderID        string`json:""`
+	Discount       int`json:""`
+	CouponDiscount int`json:""`
+	CouponCode     string`json:""`
+	TotalMrp       int`json:""`
+	Total          int`json:""`
 }

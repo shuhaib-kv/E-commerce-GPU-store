@@ -4,5 +4,5 @@ import "gorm.io/gorm"
 
 type Paymentmethod struct {
 	gorm.Model
-	Payment_Method string
+	Payment_Method string`json:""`
 }

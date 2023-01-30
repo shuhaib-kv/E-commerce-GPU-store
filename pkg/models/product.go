@@ -8,13 +8,13 @@ type Product struct {
 	gorm.Model
 	Name                  string `json:"name"`
 	Price                 int    `json:"price"`
-	ModelNo               int
-	Image1                string
-	Image2                string
-	Image3                string
+	ModelNo               int`json:""`
+	Image1                string`json:""`
+	Image2                string`json:""`
+	Image3                string`json:""`
 	Stock                 int `json:"stock"`
-	CategoryID            int
-	SubCategoryID         int
+	CategoryID            int`json:""`
+	SubCategoryID         int`json:""`
 	Description           string `json:"description"`
 	Brand                 string `json:"brand"`
 	Chipset_brand         string `json:"chipset_brand"`

@@ -3,31 +3,31 @@ package models
 import "gorm.io/gorm"
 
 type Orders struct {
-	UsersID        int
-	AddressID      int
-	OrderID        string
-	Ordertype      string
-	Discount       int
-	CouponDiscount int
-	CouponCode     string
-	Payment_Method string
-	Total_Amount   int
-	PaymentStatus  string
-	OrderStatus    string
+	UsersID        int`json:""`
+	AddressID      int`json:""`
+	OrderID        string`json:""`
+	Ordertype      string`json:""`
+	Discount       int`json:""`
+	CouponDiscount int`json:""`
+	CouponCode     string`json:""`
+	Payment_Method string`json:""`
+	Total_Amount   int`json:""`
+	PaymentStatus  string`json:""`
+	OrderStatus    string`json:""`
 }
 
 type Ordereditems struct {
 	gorm.Model
-	UsersID        int
-	ProductsID     int
-	Order_ID       string
-	Product_Name   string
-	Price          int
-	CouponDiscount int
-	Discount       int
-	PaymentStatus  string
-	OrderStatus    string
-	Payment_Method string
-	Totalamount    int
+	UsersID        int`json:""`
+	ProductsID     int`json:""`
+	Order_ID       string`json:""`
+	Product_Name   string`json:""`
+	Price          int`json:""`
+	CouponDiscount int`json:""`
+	Discount       int`json:""`
+	PaymentStatus  string`json:""`
+	OrderStatus    string`json:""`
+	Payment_Method string`json:""`
+	Totalamount    int`json:""`
 	//AmountPaid     int
 }

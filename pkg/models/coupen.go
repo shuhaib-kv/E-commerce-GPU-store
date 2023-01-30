@@ -4,7 +4,7 @@ import "gorm.io/gorm"
 
 type Coupon struct {
 	gorm.Model
-	CouponName       string
-	CouponCode       string
-	CouponPercentage int
+	CouponName       string`json:""`
+	CouponCode       string`json:""`
+	CouponPercentage int`json:""`
 }

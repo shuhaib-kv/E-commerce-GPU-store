@@ -9,8 +9,3 @@ type Admin struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
-
-type In struct {
-	gorm.Model
-	Name string
-}

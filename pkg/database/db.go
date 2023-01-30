@@ -43,9 +43,4 @@ func ConnectDB() {
 		&models.Wallet{},
 		&models.Wallethistory{},
 	)
-	// Db, err = gorm.Open(postgres.Open("host=localhost user=soib password=soib  dbname=gpu_ecom port=5432 "), &gorm.Config{})
-	// if err != nil {
-	// 	fmt.Println("error", err)
-	// }
-
 }
