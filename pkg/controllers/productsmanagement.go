@@ -198,45 +198,53 @@ func EditProduct(c *gin.Context) {
 
 }
 func ViewProducts(c *gin.Context) {
+	//done
 	var products []models.Product
 	database.Db.Find(&products)
+	if len(products) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  true,
+			"message": "No Poducts",
+			"data":    "Add some products ",
+		})
+		return
+	}
 	for _, i := range products {
-		c.JSON(200, gin.H{
+		c.JSON(http.StatusFound, gin.H{
 			"id":             i.ID,
 			"Name":           i.Name,
 			"price":          i.Price,
-			"Discount_price": i.Discount,
 			"image":          i.Image1 + i.Image2 + i.Image3,
 			"brand":          i.Brand,
+			"Discount_price": i.Discount,
 		})
 	}
 
 }
 
 func DeleteProduct(c *gin.Context) {
+	//done
 	id := c.Param("id")
-	DE := database.Db.Raw("select*from products where id =?", id)
-	if DE != nil {
-		c.JSON(200, gin.H{
+	var products models.Product
+	if err := database.Db.First(&products, "id=?", id); err.Error != nil {
+		c.JSON(http.StatusNotFound, gin.H{
 			"status":  false,
-			"message": "can't find product",
+			"message": "Cant find product",
+			"error":   "check the id",
 		})
 		return
 	}
-	var count int
-	// record := database.Db.Delete(&models.Product{}, id)
-	database.Db.Raw("select count(product_id) from products where product_id=?", id).Scan(&count)
-	if count <= 0 {
-		c.JSON(404, gin.H{
-			"msg": "product doesnot exist",
+	if err := database.Db.Delete(&products).Where("id=?", id); err.Error != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"status":  false,
+			"message": " cant delete product",
+			"error":   "database error",
 		})
-		c.Abort()
 		return
-	} else {
-		c.JSON(200, gin.H{
-			"status":  true,
-			"message": "Deleted succesfully",
-		})
 	}
-
+	c.JSON(http.StatusAccepted, gin.H{
+		"status":  true,
+		"message": "  deleted product",
+		"data":    products.Name,
+	})
 }

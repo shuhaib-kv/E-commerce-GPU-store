@@ -18,6 +18,7 @@ func ConnectDB() {
 		fmt.Println("error", err)
 		return
 	}
+
 	Db.AutoMigrate(
 		&models.Users{},
 		&models.Admin{},
