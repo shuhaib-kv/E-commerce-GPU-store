@@ -10,9 +10,9 @@ import (
 func AdminRoutes(Admin *gin.Engine) {
 
 	// admin login create
-	Admin.POST("/admin", controllers.AdminLogin)
-	Admin.POST("/admin/signup", controllers.AdminSignup)
-	Admin.POST("/admin/add", middleware.AdminAuth(), controllers.AdminSignup)
+	Admin.POST("/admin", controllers.AdminLogin)                              //done
+	Admin.POST("/admin/signup", controllers.AdminSignup)                      //done
+	Admin.POST("/admin/add", middleware.AdminAuth(), controllers.AdminSignup) //done
 
 	// usermanagement
 	Admin.GET("/admin/users", middleware.AdminAuth(), controllers.ViewUsers)
@@ -28,9 +28,9 @@ func AdminRoutes(Admin *gin.Engine) {
 
 	// product maanagement
 	Admin.POST("/admin/product/add", middleware.AdminAuth(), controllers.AdminAddProduct)
-	Admin.GET("/admin/product/view", middleware.AdminAuth(), controllers.ViewProducts)
+	Admin.GET("/admin/product/view", middleware.AdminAuth(), controllers.ViewProducts) //done
 	Admin.PATCH("/admin/product/edit/:id", middleware.AdminAuth(), controllers.EditProduct)
-	Admin.DELETE("/admin/product/delete/:id", middleware.AdminAuth(), controllers.DeleteProduct)
+	Admin.DELETE("/admin/product/delete/:id", middleware.AdminAuth(), controllers.DeleteProduct) //done
 
 	//cart
 	//paymentmethod
