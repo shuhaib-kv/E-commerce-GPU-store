@@ -15,10 +15,10 @@ func AdminRoutes(Admin *gin.Engine) {
 	Admin.POST("/admin/add", middleware.AdminAuth(), controllers.AdminSignup) //done
 
 	// usermanagement
-	Admin.GET("/admin/users", middleware.AdminAuth(), controllers.ViewUsers)
-	Admin.PATCH("/admin/users/block/:id", middleware.AdminAuth(), controllers.BlockUser)
-	Admin.PATCH("/admin/users/unblock/:id", middleware.AdminAuth(), controllers.UnBlockUser)
-	Admin.DELETE("/admin/users/delete/:id", middleware.AdminAuth(), controllers.DeleteUser)
+	Admin.GET("/admin/users", middleware.AdminAuth(), controllers.ViewUsers)                 //done
+	Admin.PATCH("/admin/users/block/:id", middleware.AdminAuth(), controllers.BlockUser)     //done
+	Admin.PATCH("/admin/users/unblock/:id", middleware.AdminAuth(), controllers.UnBlockUser) //done
+	Admin.DELETE("/admin/users/delete/:id", middleware.AdminAuth(), controllers.DeleteUser)  //done
 
 	//category management
 	Admin.POST("/admin/category/add", middleware.AdminAuth(), controllers.AddCategory)
