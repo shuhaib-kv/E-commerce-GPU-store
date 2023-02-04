@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"ga/pkg/database"
 	"ga/pkg/models"
 	"net/http"
@@ -85,7 +84,4 @@ func DeletECategory(c *gin.Context) {
 		"status":  true,
 		"message": "Deleted succesfully",
 	})
-}
-func hello() {
-	fmt.Print("wow study git")
 }

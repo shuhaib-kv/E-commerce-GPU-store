@@ -159,8 +159,6 @@ func AddTOcart(c *gin.Context) {
 		deductdiscount := discount.DiscountPercentage
 		fmt.Print(deductdiscount)
 
-		cartInfo := models.CartInfo{UsersId: UsersID, ProductsID: body.ProductsID, Discount: deductdiscount, ProductName: name, BrandName: brand, ProductPrice: price}
-		database.Db.Create(&cartInfo)
 	}
 }
 
