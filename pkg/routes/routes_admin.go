@@ -21,22 +21,21 @@ func AdminRoutes(Admin *gin.Engine) {
 	Admin.DELETE("/admin/users/delete/:id", middleware.AdminAuth(), controllers.DeleteUser)  //done
 
 	//category management
-	Admin.POST("/admin/category/add", middleware.AdminAuth(), controllers.AddCategory) //done
-	Admin.GET("/admin/category/view", middleware.AdminAuth(), controllers.ViewCategory)
-	Admin.GET("/admin/category/view/byid", middleware.AdminAuth(), controllers.ViewProductByCategory)
-
-	Admin.PATCH("/admin/category/edit", middleware.AdminAuth(), controllers.EditCategory)
-	Admin.DELETE("/admin/category/delete", middleware.AdminAuth(), controllers.DeletECategory)
+	Admin.POST("/admin/category/add", middleware.AdminAuth(), controllers.AddCategory)                //done
+	Admin.GET("/admin/category/view", middleware.AdminAuth(), controllers.ViewCategory)               //done
+	Admin.GET("/admin/category/view/byid", middleware.AdminAuth(), controllers.ViewProductByCategory) //done
+	Admin.PATCH("/admin/category/edit", middleware.AdminAuth(), controllers.EditCategory)             //done
+	Admin.DELETE("/admin/category/delete", middleware.AdminAuth(), controllers.DeletECategory)        //done
 
 	// product maanagement
 	Admin.POST("/admin/product/add", middleware.AdminAuth(), controllers.AdminAddProduct)
-	Admin.GET("/admin/product/view", middleware.AdminAuth(), controllers.ViewProducts) //done
-	Admin.PATCH("/admin/product/edit/:id", middleware.AdminAuth(), controllers.EditProduct)
+	Admin.GET("/admin/product/view", middleware.AdminAuth(), controllers.ViewProducts)           //done
+	Admin.PATCH("/admin/product/edit/:id", middleware.AdminAuth(), controllers.EditProduct)      //done
 	Admin.DELETE("/admin/product/delete/:id", middleware.AdminAuth(), controllers.DeleteProduct) //done
 
 	//cart
 	//paymentmethod
-	Admin.POST("/admin/paymentmethod", middleware.AdminAuth(), controllers.AddPaymentMethod)
+	Admin.POST("/admin/paymentmethod", middleware.AdminAuth(), controllers.AddPaymentMethod) //done
 	// Admin.GET("/admin/order/view", middleware.AdminAuth(), controllers.ViewOrders)
 	// Admin.PATCH("/admin/order/update/:id", middleware.AdminAuth(), controllers.EditOrder)
 	Admin.GET("/admin/list/coupons", middleware.AdminAuth(), controllers.ListCoupons)

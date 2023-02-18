@@ -11,6 +11,7 @@ import (
 
 func AddCoupon(c *gin.Context) {
 	// Get Info from the req body
+
 	couponName := c.PostForm("couponName")
 	couponCode := c.PostForm("couponCode")
 	Percentage := c.PostForm("couponPercentage")
