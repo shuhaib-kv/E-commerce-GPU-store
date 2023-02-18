@@ -14,7 +14,6 @@ type Product struct {
 	Image3                string
 	Stock                 int `json:"stock"`
 	CategoryID            int
-	SubCategoryID         int
 	Description           string `json:"description"`
 	Brand                 string `json:"brand"`
 	Chipset_brand         string `json:"chipset_brand"`

@@ -101,13 +101,10 @@ func AdminSignup(c *gin.Context) {
 		"message": "Account Created",
 		"data":    admin,
 	})
-	//finished
 
 }
 
 func AdminLogin(c *gin.Context) {
-	// Email := c.PostForm("email")
-	// Password := c.PostForm("password")
 	var body struct {
 		Email    string
 		Password string

@@ -4,84 +4,215 @@ import (
 	"ga/pkg/database"
 	"ga/pkg/models"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
 
 func AddCategory(c *gin.Context) {
-	Name_c := c.PostForm("name")
-
-	catogory := models.Category{
-		Name: Name_c,
+	// Parse request body
+	var reqBody struct {
+		Name string `json:"name" binding:"required"`
 	}
-	var check []models.Category
-	database.Db.Find(&check)
-	for _, i := range check {
-		if i.Name == catogory.Name {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"status":  false,
-				"message": "CATEGORY Already Exist",
-			})
-			return
-		}
-
-	}
-	result := database.Db.Create(&catogory)
-	if result.Error != nil {
-		c.JSON(400, gin.H{
-			"message": "Error",
+	if err := c.ShouldBindJSON(&reqBody); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  false,
+			"message": "Invalid request body",
 		})
+		return
 	}
-	// Return it
-	c.JSON(200, gin.H{
-		"message": "Category added",
-	})
-}
 
-func ViewCategory(c *gin.Context) {
-	var category []models.Category
-	database.Db.Find(&category)
-	for _, i := range category {
-		c.JSON(200, gin.H{
-			"id":   i.ID,
-			"Name": i.Name,
+	// Check if category with the same name already exists
+	var count int64
+	database.Db.Model(&models.Category{}).Where("name = ?", reqBody.Name).Count(&count)
+	if count > 0 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  false,
+			"message": "Category already exists",
 		})
+		return
 	}
-}
-func ViewProductByCategory(c *gin.Context) {
-	id := c.Param("id")
-	var product []models.Product
-	database.Db.Find(&product, "categoryid = ?", id)
-	for _, i := range product {
-		c.JSON(200, gin.H{
-			"id":    i.ID,
-			"Name":  i.Name,
-			"price": i.Price,
-			"image": i.Image1 + i.Image2 + i.Image3,
-			"brand": i.Brand,
+
+	// Create the new category
+	category := models.Category{Name: reqBody.Name}
+	if err := database.Db.Create(&category).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  false,
+			"message": "Failed to create category",
 		})
+		return
 	}
-}
-func EditCategory(c *gin.Context) {
-	id := c.Param("id")
-	idc, _ := strconv.Atoi(id)
-	Name := c.PostForm("name")
-	var category []models.Category
-	database.Db.First(&category, idc)
-	database.Db.Model(&category).Updates(models.Category{
-		Name: Name,
-	})
-	c.JSON(200, gin.H{
-		"message": "category updated",
-	})
-}
-func DeletECategory(c *gin.Context) {
-	id := c.Param("id")
-	idc, _ := strconv.Atoi(id)
-	database.Db.Delete(&models.Category{}, idc)
-	c.JSON(200, gin.H{
+
+	// Return success response
+	c.JSON(http.StatusOK, gin.H{
 		"status":  true,
-		"message": "Deleted succesfully",
+		"message": "Category added",
+		"data":    category,
+	})
+}
+
+// func AddCategory(c *gin.Context) {
+// 	Name_c := c.PostForm("name")
+
+// 	catogory := models.Category{
+// 		Name: Name_c,
+// 	}
+// 	var check []models.Category
+// 	database.Db.Find(&check)
+// 	for _, i := range check {
+// 		if i.Name == catogory.Name {
+// 			c.JSON(http.StatusBadRequest, gin.H{
+// 				"status":  false,
+// 				"message": "CATEGORY Already Exist",
+// 			})
+// 			return
+// 		}
+
+//		}
+//		result := database.Db.Create(&catogory)
+//		if result.Error != nil {
+//			c.JSON(400, gin.H{
+//				"message": "Error",
+//			})
+//		}
+//		// Return it
+//		c.JSON(200, gin.H{
+//			"message": "Category added",
+//		})
+//	}
+func ViewCategory(c *gin.Context) {
+	// Get all categories from database
+	var categories []models.Category
+	result := database.Db.Find(&categories)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  false,
+			"message": "Failed to retrieve categories",
+		})
+		return
+	}
+
+	// Build JSON response
+	var categoriesJSON []gin.H
+	for _, category := range categories {
+		categoryJSON := gin.H{
+			"id":   category.ID,
+			"name": category.Name,
+		}
+		categoriesJSON = append(categoriesJSON, categoryJSON)
+	}
+
+	// Return JSON response
+	c.JSON(http.StatusOK, gin.H{
+		"status":     true,
+		"message":    "fetched all categories",
+		"categories": categoriesJSON,
+	})
+}
+
+//	func ViewProductByCategory(c *gin.Context) {
+//		id := c.Param("id")
+//		var product []models.Product
+//		database.Db.Find(&product, "categoryid = ?", id)
+//		for _, i := range product {
+//			c.JSON(200, gin.H{
+//				"id":    i.ID,
+//				"Name":  i.Name,
+//				"price": i.Price,
+//				"image": i.Image1 + i.Image2 + i.Image3,
+//				"brand": i.Brand,
+//			})
+//		}
+//	}
+func ViewProductByCategory(c *gin.Context) {
+	// Get category ID from URL parameter
+	var reqBody struct {
+		Id int `json:"id" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&reqBody); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  false,
+			"message": "Invalid request body",
+		})
+		return
+	}
+	// Get all products in the specified category
+	var products []models.Product
+	database.Db.Find(&products, "id = ?", reqBody.Id)
+
+	// Return products as JSON response
+	var productJSON []gin.H
+	for _, p := range products {
+		productJSON = append(productJSON, gin.H{
+			"id":    p.ID,
+			"name":  p.Name,
+			"price": p.Price,
+			"image": p.Image1 + p.Image2 + p.Image3,
+			"brand": p.Brand,
+		})
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"status":     true,
+		"message":    "fetched all products on given category",
+		"categories": productJSON,
+	})
+}
+
+func EditCategory(c *gin.Context) {
+	var reqBody struct {
+		Id   int    `json:"id" binding:"required"`
+		Name string `json:"name" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&reqBody); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  false,
+			"message": "Invalid request body",
+		})
+		return
+	}
+	var category models.Category
+	result := database.Db.First(&category, reqBody.Id)
+	if result.Error != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  false,
+			"message": "Category not found",
+		})
+		return
+	}
+	category.Name = reqBody.Name
+	result = database.Db.Save(&category)
+	if result.Error != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  false,
+			"message": "Failed to update category",
+		})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"status":  true,
+		"message": "Category updated",
+		"data":    category,
+	})
+}
+
+func DeletECategory(c *gin.Context) {
+	var reqBody struct {
+		ID int `json:"id" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&reqBody); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  false,
+			"message": "Invalid request body",
+		})
+		return
+	}
+
+	// Delete category from database
+	database.Db.Delete(&models.Category{}, reqBody.ID)
+
+	// Return success response
+	c.JSON(http.StatusOK, gin.H{
+		"status":  true,
+		"message": "Category deleted successfully",
 	})
 }

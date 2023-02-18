@@ -5,32 +5,17 @@ import "gorm.io/gorm"
 type Cart struct {
 	gorm.Model
 
-	Product_ID    int
-	User_id       int
-	Product_Name  string
-	Brand_Name    string
-	Description   string
-	Quantity      int
-	Price         int
-	DiscountPrice int
-	Total         int
+	Product_ID int
+	User_id    int
+	Quantity   int
+	Price      int
+	Total      int
 }
-type CartInfo struct {
+
+type Cartinfo struct {
 	gorm.Model
-	UsersId      int
-	ProductsID   int
-	Discount     int
-	ProductName  string
-	BrandName    string
+	UsersID      int
+	OrderID      string
 	ProductPrice int
-}
-type Checkoutinfo struct {
-	gorm.Model
-	UsersID        int
-	OrderID        string
-	Discount       int
-	CouponDiscount int
-	CouponCode     string
-	TotalMrp       int
-	Total          int
+	Total        int
 }

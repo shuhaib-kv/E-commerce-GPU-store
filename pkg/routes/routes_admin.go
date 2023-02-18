@@ -21,10 +21,12 @@ func AdminRoutes(Admin *gin.Engine) {
 	Admin.DELETE("/admin/users/delete/:id", middleware.AdminAuth(), controllers.DeleteUser)  //done
 
 	//category management
-	Admin.POST("/admin/category/add", middleware.AdminAuth(), controllers.AddCategory)
+	Admin.POST("/admin/category/add", middleware.AdminAuth(), controllers.AddCategory) //done
 	Admin.GET("/admin/category/view", middleware.AdminAuth(), controllers.ViewCategory)
-	Admin.PATCH("/admin/category/edit/:id", middleware.AdminAuth(), controllers.EditCategory)
-	Admin.DELETE("/admin/category/delete/:id", middleware.AdminAuth(), controllers.DeletECategory)
+	Admin.GET("/admin/category/view/byid", middleware.AdminAuth(), controllers.ViewProductByCategory)
+
+	Admin.PATCH("/admin/category/edit", middleware.AdminAuth(), controllers.EditCategory)
+	Admin.DELETE("/admin/category/delete", middleware.AdminAuth(), controllers.DeletECategory)
 
 	// product maanagement
 	Admin.POST("/admin/product/add", middleware.AdminAuth(), controllers.AdminAddProduct)
