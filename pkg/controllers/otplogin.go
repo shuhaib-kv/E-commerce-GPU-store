@@ -64,6 +64,7 @@ func OtpLog(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"status":  true,
 			"message": "OTP Sent Succesfully",
+			"data":    "check your phone",
 		})
 	}
 
@@ -121,9 +122,10 @@ func CheckOtp(c *gin.Context) {
 			"data":    tokenstring,
 		})
 	} else {
-
 		c.JSON(404, gin.H{
-			"msg": "otp is invalid",
+			"status":  false,
+			"error":   "otp is invalid",
+			"message": "check otp",
 		})
 	}
 }

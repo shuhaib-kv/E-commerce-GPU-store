@@ -4,38 +4,53 @@ import (
 	"ga/pkg/database"
 	"ga/pkg/models"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
 
 func AddCoupon(c *gin.Context) {
 	// Get Info from the req body
+	var body struct {
+		CouponName       string `json:"couponname"`
+		CouponCode       string `json:"couponcode"`
+		CouponPercentage int    `json:"couponpercentage"`
+	}
+	err := c.ShouldBindJSON(&body)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  false,
+			"message": "binding json faild",
+			"data":    "error ",
+		})
+		return
+	}
+	// couponName := c.PostForm("couponName")
+	// couponCode := c.PostForm("")
+	// Percentage := c.PostForm("couponPercentage")
+	// couponPercentage, _ := strconv.Atoi(Percentage)
 
-	couponName := c.PostForm("couponName")
-	couponCode := c.PostForm("couponCode")
-	Percentage := c.PostForm("couponPercentage")
-	couponPercentage, _ := strconv.Atoi(Percentage)
-
-	coupon := models.Coupon{CouponName: couponName, CouponCode: couponCode, CouponPercentage: couponPercentage}
+	coupon := models.Coupon{CouponName: body.CouponName, CouponCode: body.CouponCode, CouponPercentage: body.CouponPercentage}
 
 	var checkCoup []models.Coupon
 	database.Db.Find(&checkCoup)
 
 	// Checking username existence
 	for _, i := range checkCoup {
-		if i.CouponName == couponName {
+		if i.CouponName == body.CouponName {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"error": "Coupon Name Already Exist",
+				"status":  false,
+				"error":   "Coupon Name Already Exist",
+				"message": "Duplicate Coupen Name",
 			})
 			return
 		}
 	}
 
 	result := database.Db.Create(&coupon)
-
 	if result.Error != nil {
 		c.JSON(400, gin.H{
+			"status":  false,
+			"error":   result.Error,
 			"message": "Error Creating Coupon",
 		})
 		return
@@ -43,6 +58,7 @@ func AddCoupon(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"status":  true,
 		"message": "Coupon Crearted",
+		"data":    coupon,
 	})
 
 }
@@ -63,15 +79,17 @@ func ListCoupons(c *gin.Context) {
 	var coupons []models.Coupon
 	result := database.Db.Find(&coupons)
 	if result.Error != nil {
-		c.JSON(400, gin.H{
+		c.JSON(http.StatusNotFound, gin.H{
 			"ststus":  false,
 			"message": "No coupon found",
+			"error":   result.Error,
 		})
 		return
 	}
-	c.JSON(200, gin.H{
+	c.JSON(http.StatusFound, gin.H{
 		"status":  true,
-		"message": coupons,
+		"message": "coupen found",
+		"data":    coupons,
 	})
 
 }
