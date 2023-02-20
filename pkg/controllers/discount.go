@@ -28,7 +28,6 @@ func AddDiscount(c *gin.Context) {
 		}
 	}
 	result := database.Db.Create(&discount)
-
 	if result.Error != nil {
 		c.JSON(400, gin.H{
 			"message": "Error Creating Coupon",
@@ -52,7 +51,6 @@ func DeleteDiscount(c *gin.Context) {
 	})
 }
 func ListDiscount(c *gin.Context) {
-
 	var discount []models.Discount
 	result := database.Db.Find(&discount)
 	if result.Error != nil {
