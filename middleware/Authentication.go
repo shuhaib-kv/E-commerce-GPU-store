@@ -55,11 +55,11 @@ var JwtKey = []byte("supersecretkey")
 
 type JWTClaim struct {
 	Email string `json:"email"`
-	Uid   int    `json:"uid"`
+	Uid   uint   `json:"uid"`
 	jwt.StandardClaims
 }
 
-func GenerateJWT(email string, uid int) (tokenString string, err error) {
+func GenerateJWT(email string, uid uint) (tokenString string, err error) {
 	expirationTime := time.Now().Add(1 * time.Hour)
 	claims := &JWTClaim{
 		Email: email,

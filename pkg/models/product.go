@@ -7,13 +7,13 @@ import (
 type Product struct {
 	gorm.Model
 	Name                  string `json:"name"`
-	Price                 int    `json:"price"`
-	ModelNo               int
+	Price                 uint   `json:"price"`
+	ModelNo               uint
 	Image1                string
 	Image2                string
 	Image3                string
-	Stock                 int `json:"stock"`
-	CategoryID            int
+	Stock                 uint `json:"stock"`
+	CategoryID            uint
 	Description           string `json:"description"`
 	Brand                 string `json:"brand"`
 	Chipset_brand         string `json:"chipset_brand"`
@@ -24,7 +24,7 @@ type Product struct {
 	Thermal_design_power  string `json:"thermal_design_power"`
 	Released              string `json:"released"`
 	Architecture          string `json:"architecture"`
-	Memmory_size          int    `json:"memmory_size"`
+	Memmory_size          uint   `json:"memmory_size"`
 	Recomented_resolution string `json:"recomented_resolution"`
 	DirectX               string `json:"directx"`
 	Memmory_bus_width     string `json:"memmory_bus_width"`
@@ -33,6 +33,6 @@ type Product struct {
 	Slots                 string `json:"slots"`
 	Rops                  string `json:"rops"`
 	Power_Connecters      string `json:"powerconnecters"`
-	Discount              int    `json:"discount"`
-	Discount_Price        int    `json:"discountprice"`
+	Discount              uint   `json:"discount"`
+	Discount_Price        uint   `json:"discountprice"`
 }

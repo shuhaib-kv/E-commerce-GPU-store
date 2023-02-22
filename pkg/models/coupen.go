@@ -6,5 +6,5 @@ type Coupon struct {
 	gorm.Model
 	CouponName       string
 	CouponCode       string
-	CouponPercentage int
+	CouponPercentage uint
 }

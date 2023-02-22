@@ -13,7 +13,7 @@ import (
 // 	var user models.Users
 // 	useremail := c.GetString("user")
 // 	database.Db.Raw("select id,phone from users where email=?", useremail).Scan(&user)
-// 	var sumtotal int
+// 	var sumtotal uint
 // 	database.Db.Raw("select sum(price) from carts where user_id=?", user.ID).Scan(&sumtotal)
 
 // 	client := razorpay.NewClient("rzp_test_Nfnipdccvgb8fW", "UfwKXCGjiUrcfTEXpWlupcrN")
@@ -76,7 +76,7 @@ func RazorPay(c *gin.Context) {
 	var user models.Users
 	useremail := c.GetString("user")
 	database.Db.Raw("select id,phone from users where email=?", useremail).Scan(&user)
-	var sumtotal int
+	var sumtotal uint
 	database.Db.Raw("select sum(total) from carts where user_id=?", user.ID).Scan(&sumtotal)
 
 	client := razorpay.NewClient("rzp_test_Nfnipdccvgb8fW", "UfwKXCGjiUrcfTEXpWlupcrN")
@@ -120,7 +120,7 @@ func RazorpaySuccess(c *gin.Context) {
 	id := c.Query("orderid")
 	totalamount := c.Query("total")
 	Rpay := models.RazorPay{
-		UserID:          userID,
+		UserID:          uint(userID),
 		OrderId:         id,
 		RazorPaymentId:  paymentid,
 		Signature:       signature,
@@ -130,7 +130,7 @@ func RazorpaySuccess(c *gin.Context) {
 	database.Db.Create(&Rpay)
 	var cart models.Cart
 	database.Db.Raw("delete from carts where user_id=?", userID).Scan(&cart)
-	OrderPlaced(userID, orderid)
+	OrderPlaced(uint(userID), orderid)
 
 	c.JSON(200, gin.H{
 
@@ -142,7 +142,7 @@ func Success(c *gin.Context) {
 	c.HTML(200, "success.html", nil)
 
 }
-func OrderPlaced(Uid int, orderId string) {
+func OrderPlaced(Uid uint, orderId string) {
 	userid := Uid
 	orderid := orderId
 

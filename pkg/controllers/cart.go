@@ -1,42 +1,36 @@
 package controllers
 
-import (
-	"errors"
-	"fmt"
-	"ga/pkg/database"
-	"ga/pkg/models"
-	"math/rand"
-	"net/http"
-	"strconv"
-	"time"
+// func CreateOrderId() string {
+// 	rand.Seed(time.Now().UnixNano())
+// 	value := rand.Intn(9999999999-1000000000) + 1000000000
+// 	id := strconv.Itoa(value)
+// 	orderID := "OID" + id
+// 	return orderID
+// }
 
-	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
-)
+// // }
+// // func CheckUser(c *gin.Context) bool {
+// // 	useremail := c.GetString("user")
+// // 	fmt.Println(useremail)
+// // 	var UsersID int
+// // 	err := database.Db.Raw("select id from users where email=?", useremail).Scan(&UsersID)
+// // 	if errors.Is(err.Error, gorm.ErrRecordNotFound) {
+// // 		return false
 
-func CreateOrderId() string {
-	rand.Seed(time.Now().UnixNano())
-	value := rand.Intn(9999999999-1000000000) + 1000000000
-	id := strconv.Itoa(value)
-	orderID := "OID" + id
-	return orderID
-}
+// // 	}
+// // 	return true
+// // }
 
 // func AddTOcart(c *gin.Context) {
-// useremail := c.GetString("user")
-// fmt.Println(useremail)
-// var UsersID int
-// err := database.Db.Raw("select id from users where email=?", useremail).Scan(&UsersID)
-// if errors.Is(err.Error, gorm.ErrRecordNotFound) {
-// 	c.JSON(http.StatusOK, gin.H{
-// 		"message": "user coudnt find",
-// 	})
-
-// }
-// var body struct {
-// 	ProductsID int `json:"productsid"`
-// 	Quantity   int `json:"quantity"`
-// }
+// 	s := CheckUser(c)
+// 	if s == false {
+// 		fmt.Println("user not ")
+// 		return
+// 	}
+// 	var body struct {
+// 		ProductsID int `json:"productsid"`
+// 		Quantity   int `json:"quantity"`
+// 	}
 // 	c.Bind(&body)
 // 	fmt.Println(body.ProductsID)
 // 	fmt.Println(body.Quantity)
@@ -50,15 +44,18 @@ func CreateOrderId() string {
 // 		})
 // 		return
 // 	}
-// 	var price int
-// 	var name string
-// 	var brand string
-// 	var discription string
-// 	var discountprice int
-// 	var total int
-// 	database.Db.Raw("SELECT price FROM products WHERE id = ?", body.ProductsID).Scan(&price)
-// 	database.Db.Raw("SELECT name FROM products WHERE id = ?", body.ProductsID).Scan(&name)
-// 	database.Db.Raw("SELECT brand FROM products WHERE id = ?", body.ProductsID).Scan(&brand)
+// 	var Display struct {
+// 		price         int
+// 		name          string
+// 		brand         string
+// 		discription   string
+// 		discountprice int
+// 		total         int
+// 	}
+
+// 	database.Db.Raw("SELECT price FROM products WHERE id = ?", body.ProductsID).Scan(&Display.price)
+// 	database.Db.Raw("SELECT name FROM products WHERE id = ?", body.ProductsID).Scan(&Display.name)
+// 	database.Db.Raw("SELECT brand FROM products WHERE id = ?", body.ProductsID).Scan(&Display.brand)
 // 	database.Db.Raw("SELECT description FROM products WHERE id = ?", body.ProductsID).Scan(&discription)
 // 	database.Db.Raw("SELECT discount_price FROM products WHERE id = ?", body.ProductsID).Scan(&discountprice)
 
@@ -370,43 +367,55 @@ func CreateOrderId() string {
 // 		return
 // 	}
 
-//		database.Db.Raw("delete from carts where user_id=?", UsersID).Scan(&cart)
-//	}
-func AddTOcart(c *gin.Context) {
-	useremail := c.GetString("user")
-	fmt.Println(useremail)
-	var UsersID int
-	err := database.Db.Raw("select id from users where email=?", useremail).Scan(&UsersID)
-	if errors.Is(err.Error, gorm.ErrRecordNotFound) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "user coudnt find",
-		})
+// 	database.Db.Raw("delete from carts where user_id=?", UsersID).Scan(&cart)
+// }
 
-	}
-	var body struct {
-		ProductsID int `json:"productsid"`
-		Quantity   int `json:"quantity"`
-	}
-	c.Bind(&body)
+// // func AddTOcart(c *gin.Context) {
+// // 	useremail := c.GetString("user")
+// // 	fmt.Println(useremail)
+// // 	var UsersID int
+// // 	err := database.Db.Raw("select id from users where email=?", useremail).Scan(&UsersID)
+// // 	if errors.Is(err.Error, gorm.ErrRecordNotFound) {
+// // 		c.JSON(http.StatusOK, gin.H{
+// // 			"message": "user coudnt find",
+// // 		})
 
-	var product models.Product
-	if err := database.Db.First(&product, body.ProductsID); err.Error != nil {
-		c.JSON(http.StatusNotFound, gin.H{
-			"status":  false,
-			"message": "Check product id",
-			"data":    "No product found",
-		})
-		return
-	}
+// // 	}
+// // 	var body struct {
+// // 		ProductsID int `json:"productsid"`
+// // 		Quantity   int `json:"quantity"`
+// // 	}
+// // 	c.Bind(&body)
 
-	if product.Stock < body.Quantity {
-		c.JSON(http.StatusNotFound, gin.H{
-			"status":  true,
-			"message": "Available stock",
-			"data":    product.Stock,
-		})
-		c.Abort()
-	}
-	
+// // 	var product models.Product
+// // 	if err := database.Db.First(&product, body.ProductsID); err.Error != nil {
+// // 		c.JSON(http.StatusNotFound, gin.H{
+// // 			"status":  false,
+// // 			"message": "Check product id",
+// // 			"data":    "No product found",
+// // 		})
+// // 		return
+// // 	}
 
-}
+// // 	if product.Stock < body.Quantity {
+// // 		c.JSON(http.StatusNotFound, gin.H{
+// // 			"status":  true,
+// // 			"message": "Available stock",
+// // 			"data":    product.Stock,
+// // 		})
+// // 		c.Abort()
+// // 	}
+
+// // }
+
+// func CheckUser(c *gin.Context) bool {
+// 	useremail := c.GetString("user")
+// 	fmt.Println(useremail)
+// 	var UsersID int
+// 	err := database.Db.Raw("select id from users where email=?", useremail).Scan(&UsersID)
+// 	if errors.Is(err.Error, gorm.ErrRecordNotFound) {
+// 		return false
+
+// 	}
+// 	return true
+// }

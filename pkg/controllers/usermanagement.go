@@ -5,7 +5,6 @@ import (
 	"ga/pkg/database"
 	"ga/pkg/models"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -39,11 +38,21 @@ func ViewUsers(c *gin.Context) {
 func BlockUser(c *gin.Context) {
 	var user models.Users
 	var updateStatus bool = true
-	id := c.Param("id")
-	idu, _ := strconv.Atoi(id)
+	var body struct {
+		userid uint
+	}
+	err := c.ShouldBindJSON(&body)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  false,
+			"message": "binding json faild",
+			"data":    "error ",
+		})
+		return
+	}
 
-	database.Db.First(&user, id)
-	if err := database.Db.Model(&user).Where("id=?", id).Update("block_status", updateStatus); err.Error != nil {
+	database.Db.First(&user, body.userid)
+	if err := database.Db.Model(&user).Where("id=?", body.userid).Update("block_status", updateStatus); err.Error != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"status":  false,
 			"message": "Cant find user",
@@ -51,7 +60,7 @@ func BlockUser(c *gin.Context) {
 		})
 		return
 	}
-	if idu != user.ID {
+	if body.userid != user.ID {
 		c.JSON(http.StatusNotFound, gin.H{
 			"status":  false,
 			"message": " User Does Not Exist",
@@ -69,11 +78,21 @@ func BlockUser(c *gin.Context) {
 func UnBlockUser(c *gin.Context) {
 	var user models.Users
 	var updateStatus bool = false
-	id := c.Param("id")
-	idu, _ := strconv.Atoi(id)
+	var body struct {
+		userid uint
+	}
+	err := c.ShouldBindJSON(&body)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  false,
+			"message": "binding json faild",
+			"data":    "error ",
+		})
+		return
+	}
 
-	database.Db.First(&user, id)
-	if err := database.Db.Model(&user).Where("id=?", id).Update("block_status", updateStatus); err.Error != nil {
+	database.Db.First(&user, body.userid)
+	if err := database.Db.Model(&user).Where("id=?", body.userid).Update("block_status", updateStatus); err.Error != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"status":  false,
 			"message": "Cant find user",
@@ -81,7 +100,7 @@ func UnBlockUser(c *gin.Context) {
 		})
 		return
 	}
-	if idu != user.ID {
+	if body.userid != user.ID {
 		c.JSON(http.StatusNotFound, gin.H{
 			"status":  false,
 			"message": " User Does Not Exist",

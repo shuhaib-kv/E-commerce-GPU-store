@@ -75,6 +75,10 @@ func UserSignUp(c *gin.Context) {
 	database.Db.First(&users, "email = ?", Email)
 	wallet := models.Wallet{UsersID: users.ID, Balance: 0}
 	database.Db.Create(&wallet)
+	var cart = models.Cart{
+		User_id: user.ID,
+	}
+	database.Db.Create(&cart)
 
 }
 func UserLogin(c *gin.Context) {

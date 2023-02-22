@@ -63,13 +63,13 @@ func AdminAddProduct(c *gin.Context) {
 	discountprice, _ := strconv.Atoi(p_Discount_price)
 	product := models.Product{
 		Name:                  P_Name,
-		Price:                 P_Price,
-		ModelNo:               Modelno,
+		Price:                 uint(P_Price),
+		ModelNo:               uint(Modelno),
 		Image1:                img1,
 		Image2:                img2,
 		Image3:                img3,
-		Stock:                 P_Stock,
-		CategoryID:            P_CategoryID,
+		Stock:                 uint(P_Stock),
+		CategoryID:            uint(P_CategoryID),
 		Description:           P_description,
 		Brand:                 P_Brand,
 		Chipset_brand:         P_Chipset_brand,
@@ -80,7 +80,7 @@ func AdminAddProduct(c *gin.Context) {
 		Thermal_design_power:  P_Thermal_design_power,
 		Released:              P_Released,
 		Architecture:          P_Architecture,
-		Memmory_size:          P_Memmory_size,
+		Memmory_size:          uint(P_Memmory_size),
 		Recomented_resolution: P_Recomented_resolution,
 		DirectX:               P_DirectX,
 		Memmory_bus_width:     P_Memmory_bus_width,
@@ -89,8 +89,8 @@ func AdminAddProduct(c *gin.Context) {
 		Slots:                 P_Slots,
 		Rops:                  P_Rops,
 		Power_Connecters:      P_Power_Connecters,
-		Discount:              discount,
-		Discount_Price:        discountprice,
+		Discount:              uint(discount),
+		Discount_Price:        uint(discountprice),
 	}
 	var check []models.Product
 	database.Db.Find(&check)
@@ -184,14 +184,14 @@ func EditProduct(c *gin.Context) {
 	ID, _ := strconv.Atoi(id)
 	var body struct {
 		Name                  string
-		Price                 int
-		ModelNo               int
+		Price                 uint
+		ModelNo               uint
 		Image1                string
 		Image2                string
 		Image3                string
-		Stock                 int
-		CategoryID            int
-		SubCategoryID         int
+		Stock                 uint
+		CategoryID            uint
+		SubCategoryID         uint
 		Description           string
 		Brand                 string
 		Chipset_brand         string
@@ -202,7 +202,7 @@ func EditProduct(c *gin.Context) {
 		Thermal_design_power  string
 		Released              string
 		Architecture          string
-		Memmory_size          int
+		Memmory_size          uint
 		Recomented_resolution string
 		DirectX               string
 		Memmory_bus_width     string
@@ -211,12 +211,12 @@ func EditProduct(c *gin.Context) {
 		Slots                 string
 		Rops                  string
 		Power_Connecters      string
-		Discount              int
-		Discount_Price        int
+		Discount              uint
+		Discount_Price        uint
 	}
 	c.Bind(&body)
 	var products []models.Product
-	var count int
+	var count uint
 	database.Db.Raw("select count(id) from products where id=?", ID).Scan(&count)
 	if count <= 0 {
 		c.JSON(404, gin.H{

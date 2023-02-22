@@ -9,14 +9,14 @@ import (
 
 type Users struct {
 	gorm.Model
-	ID             int       `json:"id" gorm:"primaryKey;unique"  `
+	ID             uint      `json:"id" gorm:"primaryKey;unique"  `
 	FirstName      string    `json:"fname"`
 	LastName       string    `json:"lname"`
 	UserName       string    `json:"uname"`
 	Email          string    `gorm:"unique"`
 	Password       string    `json:"password"`
 	Phone          string    `json:"phone"`
-	AddressId      int       `json:"addressid"`
+	AddressId      uint      `json:"addressid"`
 	Tocken         string    `json:"tocken"`
 	Refresh_tocken string    `json:"refresh_tocken"`
 	Created_at     time.Time `json:"created_at"`
@@ -42,11 +42,11 @@ func (user *Users) CheckPassword(providedPassword string) error {
 }
 
 type Address struct {
-	Address_id   int    `json:"address_id" gorm:"primaryKey"  `
-	UserId       int    `json:"user_id"  gorm:"not null" `
+	Address_id   uint   `json:"address_id" gorm:"primaryKey"  `
+	UserId       uint   `json:"user_id"  gorm:"not null" `
 	Name         string `json:"name"  gorm:"not null" `
-	Phone_number int    `json:"phone_number"  gorm:"not null" `
-	Pincode      int    `json:"pincode"  gorm:"not null" `
+	Phone_number uint   `json:"phone_number"  gorm:"not null" `
+	Pincode      uint   `json:"pincode"  gorm:"not null" `
 	House        string `json:"house"   `
 	Area         string `json:"area"   `
 	Landmark     string `json:"landmark"  gorm:"not null" `

@@ -1,7 +1,7 @@
 package models
 
 type RazorPay struct {
-	UserID          int
+	UserID          uint
 	RazorPaymentId  string
 	RazorPayOrderID string
 	Signature       string

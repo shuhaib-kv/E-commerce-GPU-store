@@ -1,5 +1,12 @@
 package controllers
 
+import (
+	"ga/pkg/database"
+	"ga/pkg/models"
+
+	"github.com/gin-gonic/gin"
+)
+
 // import (
 // 	"ga/pkg/database"
 // 	"ga/pkg/models"
@@ -7,21 +14,22 @@ package controllers
 // 	"github.com/gin-gonic/gin"
 // )
 
-// func ViewOrders(c *gin.Context) {
-// 	var order []models.Orders
-// 	database.Db.Find(&order)
-// 	for _, i := range order {
-// 		c.JSON(200, gin.H{
-// 			"id":             i.ID,
-// 			"user id":        i.UsersID,
-// 			"price":          i.Total_Amount,
-// 			"Adressid":       i.AddressID,
-// 			"order status":   i.OrderStatus,
-// 			"payment status": i.PaymentStatus,
-// 		})
-// 	}
+func ViewOrders(c *gin.Context) {
+	var order []models.Orders
+	database.Db.Find(&order)
+	for _, i := range order {
+		c.JSON(200, gin.H{
+			"id":             i.OrderID,
+			"user id":        i.UsersID,
+			"price":          i.Total_Amount,
+			"Adressid":       i.AddressID,
+			"order status":   i.OrderStatus,
+			"payment status": i.PaymentStatus,
+		})
+	}
 
-// }
+}
+
 // func EditOrder(c *gin.Context) {
 // 	id := c.Param("id")
 // 	var body struct {

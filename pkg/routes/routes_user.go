@@ -40,7 +40,7 @@ func UserRoutes(User *gin.Engine) {
 	// User.GET("/user/order/details/:id", middleware.UserAuth(), controllers.VieworderDetails)
 	// // User.POST("/user/cart/order", middleware.UserAuth(), controllers.BuyFromCart)
 	User.PATCH("/user/orde/cancel", middleware.UserAuth(), controllers.CancelOrder)
-	User.POST("/cart/add", middleware.UserAuth(), controllers.AddTOcart) //new
+	User.POST("/cart/add", middleware.UserAuth(), controllers.AddToCart) //new
 	User.GET("/razorpay", middleware.UserAuth(), controllers.RazorPay)
 	// User.GET("/user/cart/view", middleware.UserAuth(), controllers.CartList)
 	// User.POST("/chechout", middleware.UserAuth(), controllers.CheckoutCart) //new

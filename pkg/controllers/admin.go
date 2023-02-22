@@ -162,7 +162,7 @@ func AdminLogin(c *gin.Context) {
 		return
 	}
 
-	tokenstring, err := middleware.GenerateJWT(body.Email, int(admin.ID))
+	tokenstring, err := middleware.GenerateJWT(body.Email, admin.ID)
 	c.SetCookie("Adminjwt", tokenstring, 3600*24*30, "", "", false, true)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

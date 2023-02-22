@@ -3,12 +3,12 @@ package models
 import "gorm.io/gorm"
 
 type Wallet struct {
-	UsersID int
-	Balance int
+	UsersID uint
+	Balance uint
 }
 type Wallethistory struct {
 	gorm.Model
 	UsersID uint
-	Credit  int
-	Debit   int
+	Credit  uint
+	Debit   uint
 }
