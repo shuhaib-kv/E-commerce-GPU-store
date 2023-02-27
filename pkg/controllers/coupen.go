@@ -13,7 +13,7 @@ func AddCoupon(c *gin.Context) {
 	var body struct {
 		CouponName       string `json:"couponname"`
 		CouponCode       string `json:"couponcode"`
-		CouponPercentage int    `json:"couponpercentage"`
+		CouponPercentage uint   `json:"couponpercentage"`
 	}
 	err := c.ShouldBindJSON(&body)
 	if err != nil {

@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"errors"
-	"fmt"
 	"ga/pkg/database"
 	"ga/pkg/models"
 	"net/http"
@@ -13,8 +12,7 @@ import (
 
 func AddToCart(c *gin.Context) {
 	useremail := c.GetString("user")
-	fmt.Println(useremail)
-	var UsersID int
+	var UsersID uint
 	err := database.Db.Raw("select id from users where email=?", useremail).Scan(&UsersID)
 	if errors.Is(err.Error, gorm.ErrRecordNotFound) {
 		c.JSON(http.StatusOK, gin.H{
@@ -22,10 +20,9 @@ func AddToCart(c *gin.Context) {
 		})
 
 	}
-
 	var body struct {
-		Productid int
-		Quantity  int
+		Productid uint
+		Quantity  uint
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -44,7 +41,6 @@ func AddToCart(c *gin.Context) {
 		})
 		return
 	}
-	fmt.Println(product.Stock)
 
 	var cart models.Cart
 	if err := database.Db.Find(&cart, UsersID).Scan(&cart).Error; err != nil {
@@ -63,21 +59,13 @@ func AddToCart(c *gin.Context) {
 		})
 		return
 	}
-	var existingItem models.CartProducts
-	if err := database.Db.Where("cartid = ? AND productid = ?", cart.User_id, body.Productid).First(&existingItem).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-
-		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"status": false,
-				"error":  err.Error(),
-				"data":   nil,
-			})
-			return
-		}
-
-		if existingItem.ID == uint(body.Productid) {
+	//
+	var existingItems []models.CartProducts
+	database.Db.Where("cartid = ?", cart.User_id).Find(&existingItems)
+	for _, existingItem := range existingItems {
+		if existingItem.Productid == body.Productid {
 			newQuantity := existingItem.Quantity + body.Quantity
+			newPrice := product.Price * newQuantity
 			if newQuantity > product.Stock {
 				c.JSON(http.StatusNotFound, gin.H{
 					"status":  false,
@@ -86,8 +74,10 @@ func AddToCart(c *gin.Context) {
 				})
 				return
 			}
-
-			if err := database.Db.Model(&existingItem).Update("quantity", newQuantity).Error; err != nil {
+			if err := database.Db.Model(&existingItem).Updates(models.CartProducts{
+				Quantity:     newQuantity,
+				ProductPrice: newPrice,
+			}).Error; err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{
 					"status": false,
 					"error":  err.Error(),
@@ -102,6 +92,7 @@ func AddToCart(c *gin.Context) {
 				"productid":   existingItem.Productid,
 				"productname": existingItem.ProductName,
 				"quantity":    newQuantity,
+				"totalprice":  existingItem.ProductPrice,
 			}
 
 			c.JSON(http.StatusAccepted, gin.H{
@@ -112,14 +103,13 @@ func AddToCart(c *gin.Context) {
 			return
 		}
 	}
-	// item is in cart, update the quantity
 
 	var cartproduct = models.CartProducts{
-		Cartid:       int(cart.ID),
+		Cartid:       uint(cart.ID),
 		Productid:    body.Productid,
 		ProductName:  product.Name,
 		Quantity:     body.Quantity,
-		ProductPrice: product.Price,
+		ProductPrice: product.Price * body.Quantity,
 	}
 
 	if err := database.Db.Create(&cartproduct).Error; err != nil {
@@ -130,12 +120,67 @@ func AddToCart(c *gin.Context) {
 		})
 		return
 	}
+
 	c.JSON(http.StatusAccepted, gin.H{
 		"status":  true,
 		"data":    cartproduct,
 		"message": "Added to cart",
 	})
-}
-func ViewCart(c gin.Context) {
 
+}
+
+func ViewCart(c *gin.Context) {
+	// Get user ID
+	useremail := c.GetString("user")
+	var userID uint
+	err := database.Db.Raw("select id from users where email=?", useremail).Scan(&userID)
+	if errors.Is(err.Error, gorm.ErrRecordNotFound) {
+		c.JSON(http.StatusNotFound, gin.H{
+			"status":  false,
+			"message": "User not found",
+		})
+		return
+	}
+
+	// Find cart for the user
+	var cart models.Cart
+	if err := database.Db.Where("user_id = ?", userID).First(&cart).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"status": false,
+			"error":  "Cart not found",
+			"data":   "null",
+		})
+		return
+	}
+
+	// Find products in the cart
+	var cartProducts []models.CartProducts
+	database.Db.Where("cartid = ?", cart.ID).Find(&cartProducts)
+
+	// Calculate total amount
+	var totalAmount uint
+	for _, product := range cartProducts {
+		totalAmount += product.ProductPrice
+	}
+
+	// Build output JSON
+	var output struct {
+		CartID       uint                     `json:"cart_id"`
+		TotalAmount  uint                     `json:"total_amount"`
+		CartProducts []map[string]interface{} `json:"cart_products"`
+	}
+	output.CartID = cart.ID
+	output.TotalAmount = totalAmount
+	for _, product := range cartProducts {
+		output.CartProducts = append(output.CartProducts, map[string]interface{}{
+			"name":  product.ProductName,
+			"price": product.ProductPrice,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  true,
+		"message": "items in your cart",
+		"data":    output,
+	})
 }

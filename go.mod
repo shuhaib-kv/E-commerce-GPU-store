@@ -4,6 +4,8 @@ go 1.19
 
 require github.com/go-redis/redis v6.15.9+incompatible
 
+require github.com/gofrs/uuid v4.4.0+incompatible // indirect
+
 require (
 	github.com/fatih/color v1.9.0 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect

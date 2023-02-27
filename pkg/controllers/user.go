@@ -131,7 +131,7 @@ func AddAddress(c *gin.Context) {
 	// City := c.PostForm("city")
 	useremail := c.GetString("user")
 	fmt.Println(useremail)
-	var UsersID int
+	var UsersID uint
 	err := database.Db.Raw("select id from users where email=?", useremail).Scan(&UsersID)
 	if errors.Is(err.Error, gorm.ErrRecordNotFound) {
 		c.JSON(http.StatusOK, gin.H{
@@ -140,8 +140,8 @@ func AddAddress(c *gin.Context) {
 	}
 	var body struct {
 		Name         string
-		Phone_number int
-		Pincode      int
+		Phone_number uint
+		Pincode      uint
 		House        string
 		Area         string
 		Landmark     string
@@ -171,7 +171,7 @@ func AddAddress(c *gin.Context) {
 
 func ShowAddress(c *gin.Context) {
 	useremail := c.GetString("user")
-	var UsersID int
+	var UsersID uint
 	err := database.Db.Raw("select id from users where email=?", useremail).Scan(&UsersID)
 	if errors.Is(err.Error, gorm.ErrRecordNotFound) {
 		c.JSON(http.StatusOK, gin.H{
@@ -180,10 +180,10 @@ func ShowAddress(c *gin.Context) {
 
 	}
 	var Adress []struct {
-		Address_id   int
+		Address_id   uint
 		Name         string
-		Phone_number int
-		Pincode      int
+		Phone_number uint
+		Pincode      uint
 		House        string
 		Area         string
 		Landmark     string
@@ -203,7 +203,7 @@ func ShowAddress(c *gin.Context) {
 }
 func SelectAddress(c *gin.Context) {
 	useremail := c.GetString("user")
-	var UsersID int
+	var UsersID uint
 	err := database.Db.Raw("select id from users where email=?", useremail).Scan(&UsersID)
 	if errors.Is(err.Error, gorm.ErrRecordNotFound) {
 		c.JSON(http.StatusOK, gin.H{
@@ -230,7 +230,7 @@ func SelectAddress(c *gin.Context) {
 func EditAddress(c *gin.Context) {
 	useremail := c.GetString("user")
 	adress := c.Param("id")
-	var UsersID int
+	var UsersID uint
 	err := database.Db.Raw("select id from users where email=?", useremail).Scan(&UsersID)
 	if errors.Is(err.Error, gorm.ErrRecordNotFound) {
 		c.JSON(http.StatusOK, gin.H{
@@ -240,8 +240,8 @@ func EditAddress(c *gin.Context) {
 	}
 	var body struct {
 		Name         string
-		Phone_number int
-		Pincode      int
+		Phone_number uint
+		Pincode      uint
 		House_Adress string
 		Area         string
 		Landmark     string

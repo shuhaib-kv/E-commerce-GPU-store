@@ -3,31 +3,20 @@ package models
 import "gorm.io/gorm"
 
 type Orders struct {
-	UsersID        uint
-	AddressID      uint
-	OrderID        string
-	Ordertype      string
-	Discount       uint
-	CouponDiscount uint
-	CouponCode     string
-	Payment_Method string
-	Total_Amount   uint
-	PaymentStatus  string
-	OrderStatus    string
+	UsersID       uint
+	AddressID     uint
+	Orderid       string
+	PaymentMethod string
+	TotalAmount   uint
+	Status        uint
 }
 
 type Ordereditems struct {
 	gorm.Model
-	UsersID        uint
-	ProductsID     uint
-	Order_ID       string
-	Product_Name   string
-	Price          uint
-	CouponDiscount uint
-	Discount       uint
-	PaymentStatus  string
-	OrderStatus    string
-	Payment_Method string
-	Totalamount    uint
+	OrderID     string `json:"order_id"`
+	ProductID   uint   `json:"product_id"`
+	ProductName string `json:"product_name"`
+	Quantity    uint   `json:"quantity"`
+	Price       uint   `json:"price"`
 	//AmountPaid     int
 }
