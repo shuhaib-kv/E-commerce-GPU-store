@@ -8,7 +8,8 @@ type Orders struct {
 	Orderid       string
 	PaymentMethod string
 	TotalAmount   uint
-	Status        uint
+	Status        bool
+	Paymentstatus bool
 }
 
 type Ordereditems struct {
@@ -18,5 +19,4 @@ type Ordereditems struct {
 	ProductName string `json:"product_name"`
 	Quantity    uint   `json:"quantity"`
 	Price       uint   `json:"price"`
-	//AmountPaid     int
 }

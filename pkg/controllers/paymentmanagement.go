@@ -14,8 +14,8 @@ func AddPaymentMethod(c *gin.Context) {
 	}
 	if err := c.Bind(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"status": false,
-
+			"status":  false,
+			"error":   err,
 			"message": "Invalid request body",
 		})
 		return
@@ -26,8 +26,8 @@ func AddPaymentMethod(c *gin.Context) {
 	result := database.Db.Create(&paymentMethod)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"status": false,
-
+			"status":  false,
+			"error":   result.Error,
 			"message": "Failed to add payment method",
 		})
 		return
