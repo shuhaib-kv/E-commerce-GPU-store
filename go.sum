@@ -187,6 +187,8 @@ github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.7.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO+kdMU+MU=
+github.com/stripe/stripe-go v70.15.0+incompatible h1:hNML7M1zx8RgtepEMlxyu/FpVPrP7KZm1gPFQquJQvM=
+github.com/stripe/stripe-go v70.15.0+incompatible/go.mod h1:A1dQZmO/QypXmsL0T8axYZkSN/uA/T/A64pfKdBAMiY=
 github.com/tawesoft/golib/v2 v2.5.2 h1:EBVQvl0ZP72hxEoXvL1Zl3U+hiF9hz0e1sjk0PJ/RlE=
 github.com/tawesoft/golib/v2 v2.5.2/go.mod h1:pNOo6yR1D79s9uYcG9apB7VxoE9Zimftq/BhSF9hjYs=
 github.com/twilio/twilio-go v1.1.0 h1:HdU4gROn6JAKijWIJKEx4kt8co97IDJYkSiVZyyuTUI=

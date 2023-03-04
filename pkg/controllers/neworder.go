@@ -19,80 +19,6 @@ const (
 	PaymentMethodRazorpay PaymentMethod = "razorpay"
 )
 
-// func OrderCart(c *gin.Context) {
-// var body struct {
-// 	Paymentmethod PaymentMethod `json:"payment_method" binding:"required,oneof=cod razorpay"`
-// }
-
-// if err := c.ShouldBindJSON(&body); err != nil {
-// 	c.JSON(http.StatusBadRequest, gin.H{
-// 		"status":  false,
-// 		"message": "Invalid request body",
-// 		"error":   err.Error(),
-// 	})
-// 	return
-// }
-
-// // Get user ID
-// useremail := c.GetString("user")
-// var userID uint
-// err := database.Db.Raw("select id from users where email=?", useremail).Scan(&userID)
-// if errors.Is(err.Error, gorm.ErrRecordNotFound) {
-// 	c.JSON(http.StatusNotFound, gin.H{
-// 		"status":  false,
-// 		"message": "User not found",
-// 	})
-// 	return
-// }
-
-// // Find cart for the user
-// var cart models.Cart
-// if err := database.Db.Where("user_id = ?", userID).First(&cart).Error; err != nil {
-// 	c.JSON(http.StatusNotFound, gin.H{
-// 		"status": false,
-// 		"error":  "Cart not found",
-// 		"data":   "null",
-// 	})
-// 	return
-// }
-
-// // Find products in the cart
-// var cartProducts []models.CartProducts
-// database.Db.Where("cartid = ?", cart.ID).Find(&cartProducts)
-
-// // Calculate total amount
-// var totalAmount uint
-// for _, product := range cartProducts {
-// 	totalAmount += product.ProductPrice
-// }
-
-// // Create order in database
-// order := models.Orders{
-// 	UsersID:       userID,
-// 	PaymentMethod: string(body.Paymentmethod),
-// 	TotalAmount:   totalAmount,
-// 	Status:        123,
-// }
-// if err := database.Db.Create(&order).Error; err != nil {
-// 	c.JSON(http.StatusInternalServerError, gin.H{
-// 		"status":  false,
-// 		"message": "Failed to create order",
-// 		"error":   err.Error(),
-// 	})
-// 	return
-// }
-
-// // Clear cart
-// database.Db.Where("cartid = ?", cart.ID).Delete(&models.CartProducts{})
-// database.Db.Delete(&cart)
-
-// c.JSON(http.StatusOK, gin.H{
-// 	"status":   true,
-// 	"message":  fmt.Sprintf("Order placed successfully with payment method %s", body.Paymentmethod),
-// 	"order_id": order,
-// 	})
-
-// }
 func OrderCart(c *gin.Context) {
 	var body struct {
 		Paymentmethod PaymentMethod `json:"payment_method" binding:"required,oneof=cod razorpay"`
@@ -107,8 +33,6 @@ func OrderCart(c *gin.Context) {
 		})
 		return
 	}
-
-	// Get user ID
 	useremail := c.GetString("user")
 	var userID uint
 	err := database.Db.Raw("select id from users where email=?", useremail).Scan(&userID)
@@ -120,7 +44,6 @@ func OrderCart(c *gin.Context) {
 		return
 	}
 
-	// Find cart for the user
 	var cart models.Cart
 	if err := database.Db.Where("user_id = ?", userID).First(&cart).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
@@ -130,8 +53,23 @@ func OrderCart(c *gin.Context) {
 		})
 		return
 	}
+	var cartProducts []models.CartProducts
+	if err := database.Db.Where("cartid = ?", cart.ID).Find(&cartProducts).Error; err != nil {
+		return
+	}
+	var totalAmount uint
+	for _, cp := range cartProducts {
+		totalAmount += cp.Quantity * cp.ProductPrice
+	}
+	if totalAmount == 0 {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  false,
+			"message": "cart is nill",
+			"error":   "add some products to cart",
+		})
+		return
+	}
 	if body.Paymentmethod == PaymentMethodCOD {
-		// Create the order from the cart
 		if _, err := createOrder(cart.ID, userID, body.Address, string(body.Paymentmethod)); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"status":  false,
@@ -157,7 +95,6 @@ func OrderCart(c *gin.Context) {
 			})
 			return
 		}
-
 		c.JSON(http.StatusOK, gin.H{
 			"status":  true,
 			"message": fmt.Sprintf("Order payment method %s", body.Paymentmethod),
@@ -174,22 +111,19 @@ type CreateOrderResponse struct {
 }
 
 func createOrder(cartID uint, userID uint, addressID uint, paymentMethod string) (*CreateOrderResponse, error) {
-	// Get the products in the cart
 	var cartProducts []models.CartProducts
 	if err := database.Db.Where("cartid = ?", cartID).Find(&cartProducts).Error; err != nil {
 		return nil, err
 	}
 
-	// Calculate the total amount of the order
 	var totalAmount uint
 	for _, cp := range cartProducts {
 		totalAmount += cp.Quantity * cp.ProductPrice
 	}
-	// Create the order
 	order := models.Orders{
 		UsersID:       userID,
 		AddressID:     addressID,
-		Orderid:       uuid.New().String(), // generate a unique order ID using UUID
+		Orderid:       uuid.New().String(),
 		PaymentMethod: paymentMethod,
 		TotalAmount:   totalAmount,
 		Status:        true,
@@ -199,7 +133,6 @@ func createOrder(cartID uint, userID uint, addressID uint, paymentMethod string)
 		return nil, err
 	}
 
-	// Add the products in the cart to the order
 	for _, cp := range cartProducts {
 		orderedItem := models.Ordereditems{
 			OrderID:     order.Orderid,
@@ -213,16 +146,63 @@ func createOrder(cartID uint, userID uint, addressID uint, paymentMethod string)
 		}
 	}
 
-	// Delete the products in the cart
 	if err := database.Db.Where("cartid = ?", cartID).Delete(&models.CartProducts{}).Error; err != nil {
 		return nil, err
 	}
 
-	// Create the response
 	response := CreateOrderResponse{
 		OrderID: order.Orderid,
 		Amount:  totalAmount,
 	}
 
 	return &response, nil
+}
+
+type OrderItemResponse struct {
+	ProductName string `json:"product_name"`
+	Quantity    uint   `json:"quantity"`
+	Price       uint   `json:"price"`
+}
+
+type OrderResponse struct {
+	OrderID       string              `json:"order_id"`
+	PaymentMethod string              `json:"payment_method"`
+	PaymentStatus bool                `json:"payment_status"`
+	TotalAmount   uint                `json:"total_amount"`
+	OrderedItems  []OrderItemResponse `json:"ordered_items"`
+}
+
+func ListOrders(c *gin.Context) {
+	var orders []models.Orders
+
+	// Retrieve all orders
+	if err := database.Db.Find(&orders).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Error retrieving orders"})
+		return
+	}
+
+	// Retrieve the items associated with each order
+	var orderResponses []OrderResponse
+	for _, order := range orders {
+		var orderedItems []OrderItemResponse
+		if err := database.Db.Table("ordereditems").Select("product_name, quantity, price").Where("order_id = ?", order.Orderid).Scan(&orderedItems).Error; err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Error retrieving order items"})
+			return
+		}
+
+		orderID := order.Orderid
+		paymentMethod := order.PaymentMethod
+		paymentStatus := order.Paymentstatus
+		totalAmount := order.TotalAmount
+		orderResponse := OrderResponse{
+			OrderID:       orderID,
+			PaymentMethod: paymentMethod,
+			PaymentStatus: paymentStatus,
+			TotalAmount:   totalAmount,
+			OrderedItems:  orderedItems,
+		}
+		orderResponses = append(orderResponses, orderResponse)
+	}
+
+	c.JSON(http.StatusOK, gin.H{"orders": orderResponses})
 }

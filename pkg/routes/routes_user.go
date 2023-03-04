@@ -26,12 +26,13 @@ func UserRoutes(User *gin.Engine) {
 
 	// User.GET("/user/cart/view", middleware.UserAuth(), controllers.CartLists)
 	User.GET("/payment-success", middleware.UserAuth(), controllers.RazorpaySuccess)
-	User.GET("/success", controllers.Success)
+	User.GET("/success", middleware.UserAuth(), controllers.Success)
 	User.GET("/user/address", middleware.UserAuth(), controllers.ShowAddress)
 
 	//ordernow
 
-	User.POST("/cart/order", middleware.UserAuth(), controllers.OrderCart) //Done
+	User.POST("/cart/order", middleware.UserAuth(), controllers.OrderCart)     //Done
+	User.GET("/user/orderview", middleware.UserAuth(), controllers.ListOrders) //Done
 
 	// // User.POST("/user/cart/order", middleware.UserAuth(), controllers.BuyFromCart)
 	User.POST("/cart/add", middleware.UserAuth(), controllers.AddToCart) //Done

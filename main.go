@@ -21,6 +21,6 @@ func main() {
 	// app.Use(gin.Logger())
 	routes.UserRoutes(app)
 	routes.AdminRoutes(app)
-	app.Run(":8085") // Port Declaration to serve the routes
+	app.Run(":8087") // Port Declaration to serve the routes
 
 }

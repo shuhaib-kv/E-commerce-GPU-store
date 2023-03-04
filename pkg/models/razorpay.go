@@ -1,11 +1,12 @@
 package models
 
+import "gorm.io/gorm"
+
 type RazorPay struct {
+	gorm.Model
 	UserID          uint
 	RazorPaymentId  string
 	RazorPayOrderID string
-	Orderid         string
 	Signature       string
-	OrderId         string
-	AmountPaid      string
+	AmountPaid      uint
 }
