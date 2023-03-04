@@ -16,6 +16,7 @@ func RazorPay(c *gin.Context) {
 	database.Db.Raw("select id,phone from users where email=?", useremail).Scan(&user)
 	var order models.Orders
 	database.Db.Where("users_id= ?", user.ID).First(&order)
+	database.Db.Model(&models.Orders{}).Where("orderid = ?", order.Orderid).Update("paymentstatus=?", true)
 
 	client := razorpay.NewClient("rzp_test_Nfnipdccvgb8fW", "UfwKXCGjiUrcfTEXpWlupcrN")
 	razpayvalue := order.TotalAmount * 100
@@ -26,7 +27,6 @@ func RazorPay(c *gin.Context) {
 	}
 	body, err := client.Order.Create(data, nil)
 	value := body["id"]
-
 	if err != nil {
 		c.JSON(404, gin.H{
 			"msg": "error creating order",
@@ -58,11 +58,7 @@ func RazorpaySuccess(c *gin.Context) {
 	userid := c.Query("user_id")
 	userID, _ := strconv.Atoi(userid)
 	orderid := c.Query("order_id")
-	// paymentid := c.Query("payment_id")
 	signature := c.Query("signature")
-	// id := c.Query("orderid")
-	// totalamount := c.Query("total")
-	// s, _ := strconv.Atoi(totalamount)
 	var order models.Orders
 	database.Db.Where("users_id= ?", user.ID).First(&order)
 	Rpay := models.RazorPay{
@@ -76,17 +72,6 @@ func RazorpaySuccess(c *gin.Context) {
 	if err.Error != nil {
 		fmt.Println("error")
 	}
-	// var cart models.Cart
-	// database.Db.Raw("delete from carts where user_id=?", userID).Scan(&cart)
-	// if _, err := createOrder(cart.ID, userID, body.Address, string(body.Paymentmethod)); err != nil {
-	// 	c.JSON(http.StatusInternalServerError, gin.H{
-	// 		"status":  false,
-	// 		"message": "Failed to create order",
-	// 		"error":   err,
-	// 	})
-	// 	return
-	// }
-
 	c.JSON(200, gin.H{
 
 		"status": true,

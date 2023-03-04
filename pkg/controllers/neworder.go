@@ -6,6 +6,7 @@ import (
 	"ga/pkg/database"
 	"ga/pkg/models"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -111,51 +112,100 @@ type CreateOrderResponse struct {
 }
 
 func createOrder(cartID uint, userID uint, addressID uint, paymentMethod string) (*CreateOrderResponse, error) {
-	var cartProducts []models.CartProducts
-	if err := database.Db.Where("cartid = ?", cartID).Find(&cartProducts).Error; err != nil {
-		return nil, err
-	}
-
-	var totalAmount uint
-	for _, cp := range cartProducts {
-		totalAmount += cp.Quantity * cp.ProductPrice
-	}
-	order := models.Orders{
-		UsersID:       userID,
-		AddressID:     addressID,
-		Orderid:       uuid.New().String(),
-		PaymentMethod: paymentMethod,
-		TotalAmount:   totalAmount,
-		Status:        true,
-		Paymentstatus: false,
-	}
-	if err := database.Db.Create(&order).Error; err != nil {
-		return nil, err
-	}
-
-	for _, cp := range cartProducts {
-		orderedItem := models.Ordereditems{
-			OrderID:     order.Orderid,
-			ProductID:   cp.Productid,
-			ProductName: cp.ProductName,
-			Quantity:    cp.Quantity,
-			Price:       cp.ProductPrice,
-		}
-		if err := database.Db.Create(&orderedItem).Error; err != nil {
+	if paymentMethod == "cod" {
+		var cartProducts []models.CartProducts
+		if err := database.Db.Where("cartid = ?", cartID).Find(&cartProducts).Error; err != nil {
 			return nil, err
 		}
+
+		var totalAmount uint
+		for _, cp := range cartProducts {
+			totalAmount += cp.Quantity * cp.ProductPrice
+		}
+		order := models.Orders{
+			UsersID:       userID,
+			AddressID:     addressID,
+			Orderid:       uuid.New().String(),
+			PaymentMethod: paymentMethod,
+			TotalAmount:   totalAmount,
+			Status:        true,
+			Paymentstatus: false,
+		}
+		if err := database.Db.Create(&order).Error; err != nil {
+			return nil, err
+		}
+
+		for _, cp := range cartProducts {
+			orderedItem := models.Ordereditems{
+				OrderID:     order.Orderid,
+				ProductID:   cp.Productid,
+				ProductName: cp.ProductName,
+				Quantity:    cp.Quantity,
+				Price:       cp.ProductPrice,
+			}
+			if err := database.Db.Create(&orderedItem).Error; err != nil {
+				return nil, err
+			}
+		}
+
+		if err := database.Db.Where("cartid = ?", cartID).Delete(&models.CartProducts{}).Error; err != nil {
+			return nil, err
+		}
+
+		response := CreateOrderResponse{
+			OrderID: order.Orderid,
+			Amount:  totalAmount,
+		}
+
+		return &response, nil
+	} else {
+		var cartProducts []models.CartProducts
+		if err := database.Db.Where("cartid = ?", cartID).Find(&cartProducts).Error; err != nil {
+			return nil, err
+		}
+
+		var totalAmount uint
+		for _, cp := range cartProducts {
+			totalAmount += cp.Quantity * cp.ProductPrice
+		}
+		order := models.Orders{
+			UsersID:       userID,
+			AddressID:     addressID,
+			Orderid:       uuid.New().String(),
+			PaymentMethod: paymentMethod,
+			TotalAmount:   totalAmount,
+			Status:        true,
+			Paymentstatus: true,
+		}
+		if err := database.Db.Create(&order).Error; err != nil {
+			return nil, err
+		}
+
+		for _, cp := range cartProducts {
+			orderedItem := models.Ordereditems{
+				OrderID:     order.Orderid,
+				ProductID:   cp.Productid,
+				ProductName: cp.ProductName,
+				Quantity:    cp.Quantity,
+				Price:       cp.ProductPrice,
+			}
+			if err := database.Db.Create(&orderedItem).Error; err != nil {
+				return nil, err
+			}
+		}
+
+		if err := database.Db.Where("cartid = ?", cartID).Delete(&models.CartProducts{}).Error; err != nil {
+			return nil, err
+		}
+
+		response := CreateOrderResponse{
+			OrderID: order.Orderid,
+			Amount:  totalAmount,
+		}
+
+		return &response, nil
 	}
 
-	if err := database.Db.Where("cartid = ?", cartID).Delete(&models.CartProducts{}).Error; err != nil {
-		return nil, err
-	}
-
-	response := CreateOrderResponse{
-		OrderID: order.Orderid,
-		Amount:  totalAmount,
-	}
-
-	return &response, nil
 }
 
 type OrderItemResponse struct {
@@ -163,12 +213,12 @@ type OrderItemResponse struct {
 	Quantity    uint   `json:"quantity"`
 	Price       uint   `json:"price"`
 }
-
 type OrderResponse struct {
-	OrderID       string              `json:"order_id"`
-	PaymentMethod string              `json:"payment_method"`
-	PaymentStatus bool                `json:"payment_status"`
-	TotalAmount   uint                `json:"total_amount"`
+	OrderID       string `json:"order_id"`
+	PaymentMethod string `json:"payment_method"`
+	PaymentStatus bool   `json:"payment_status"`
+	TotalAmount   uint   `json:"total_amount"`
+	Date          time.Time
 	OrderedItems  []OrderItemResponse `json:"ordered_items"`
 }
 
@@ -194,15 +244,20 @@ func ListOrders(c *gin.Context) {
 		paymentMethod := order.PaymentMethod
 		paymentStatus := order.Paymentstatus
 		totalAmount := order.TotalAmount
+
 		orderResponse := OrderResponse{
 			OrderID:       orderID,
 			PaymentMethod: paymentMethod,
 			PaymentStatus: paymentStatus,
 			TotalAmount:   totalAmount,
+			Date:          order.CreatedAt,
 			OrderedItems:  orderedItems,
 		}
 		orderResponses = append(orderResponses, orderResponse)
 	}
-
-	c.JSON(http.StatusOK, gin.H{"orders": orderResponses})
+	c.JSON(http.StatusOK, gin.H{
+		"orders":  orderResponses,
+		"status":  true,
+		"message": "your orders",
+	})
 }

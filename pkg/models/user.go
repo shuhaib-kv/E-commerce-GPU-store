@@ -42,6 +42,8 @@ func (user *Users) CheckPassword(providedPassword string) error {
 }
 
 type Address struct {
+	gorm.Model
+
 	Address_id   uint   `json:"address_id" gorm:"primaryKey"  `
 	UserId       uint   `json:"user_id"  gorm:"not null" `
 	Name         string `json:"name"  gorm:"not null" `

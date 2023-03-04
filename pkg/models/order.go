@@ -3,6 +3,7 @@ package models
 import "gorm.io/gorm"
 
 type Orders struct {
+	gorm.Model
 	UsersID       uint
 	AddressID     uint
 	Orderid       string
