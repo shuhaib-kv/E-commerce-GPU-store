@@ -103,7 +103,6 @@ func AddToCart(c *gin.Context) {
 			return
 		}
 	}
-
 	var cartproduct = models.CartProducts{
 		Cartid:       uint(cart.ID),
 		Productid:    body.Productid,
@@ -120,17 +119,24 @@ func AddToCart(c *gin.Context) {
 		})
 		return
 	}
+	output := make([]map[string]interface{}, 1)
+	output[0] = map[string]interface{}{
+		"cartid":      cartproduct.Cartid,
+		"productid":   cartproduct.Productid,
+		"productname": cartproduct.ProductName,
+		"quantity":    body.Quantity,
+		"totalprice":  cartproduct.ProductPrice,
+	}
 
 	c.JSON(http.StatusAccepted, gin.H{
 		"status":  true,
-		"data":    cartproduct,
+		"data":    output,
 		"message": "Added to cart",
 	})
 
 }
 
 func ViewCart(c *gin.Context) {
-	// Get user ID
 	useremail := c.GetString("user")
 	var userID uint
 	err := database.Db.Raw("select id from users where email=?", useremail).Scan(&userID)
@@ -142,7 +148,6 @@ func ViewCart(c *gin.Context) {
 		return
 	}
 
-	// Find cart for the user
 	var cart models.Cart
 	if err := database.Db.Where("user_id = ?", userID).First(&cart).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
@@ -153,17 +158,14 @@ func ViewCart(c *gin.Context) {
 		return
 	}
 
-	// Find products in the cart
 	var cartProducts []models.CartProducts
 	database.Db.Where("cartid = ?", cart.ID).Find(&cartProducts)
 
-	// Calculate total amount
 	var totalAmount uint
 	for _, product := range cartProducts {
 		totalAmount += product.ProductPrice
 	}
 
-	// Build output JSON
 	var output struct {
 		CartID       uint                     `json:"cart_id"`
 		TotalAmount  uint                     `json:"total_amount"`

@@ -121,8 +121,9 @@ func createOrder(cartID uint, userID uint, addressID uint, paymentMethod string)
 
 		var totalAmount uint
 		for _, cp := range cartProducts {
-			totalAmount += cp.Quantity * cp.ProductPrice
+			totalAmount += cp.ProductPrice
 		}
+
 		order := models.Orders{
 			UsersID:              userID,
 			AddressID:            addressID,
@@ -167,9 +168,10 @@ func createOrder(cartID uint, userID uint, addressID uint, paymentMethod string)
 		}
 
 		var totalAmount uint
-		for _, cp := range cartProducts {
-			totalAmount += cp.Quantity * cp.ProductPrice
+		for _, product := range cartProducts {
+			totalAmount += product.ProductPrice
 		}
+
 		order := models.Orders{
 			UsersID:       userID,
 			AddressID:     addressID,
@@ -222,6 +224,7 @@ type OrderResponse struct {
 	PaymentStatus bool   `json:"payment_status"`
 	TotalAmount   uint   `json:"total_amount"`
 	Date          time.Time
+	Deliverydate  time.Time           `json:"delivery_date"`
 	OrderedItems  []OrderItemResponse `json:"ordered_items"`
 }
 
@@ -247,6 +250,7 @@ func ListOrders(c *gin.Context) {
 		paymentMethod := order.PaymentMethod
 		paymentStatus := order.Paymentstatus
 		totalAmount := order.TotalAmount
+		deliverydate := order.ExpectedDeliveryDate
 
 		orderResponse := OrderResponse{
 			OrderID:       orderID,
@@ -255,6 +259,7 @@ func ListOrders(c *gin.Context) {
 			TotalAmount:   totalAmount,
 			Date:          order.CreatedAt,
 			OrderedItems:  orderedItems,
+			Deliverydate:  deliverydate,
 		}
 		orderResponses = append(orderResponses, orderResponse)
 	}

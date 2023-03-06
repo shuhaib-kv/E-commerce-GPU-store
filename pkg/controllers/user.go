@@ -263,7 +263,6 @@ func EditAddress(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
 	if err := database.Db.Model(&models.Address{}).Where("id = ?", address.ID).Updates(&address).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

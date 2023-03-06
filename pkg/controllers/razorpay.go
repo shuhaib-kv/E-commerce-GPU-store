@@ -15,9 +15,7 @@ func RazorPay(c *gin.Context) {
 	useremail := c.GetString("user")
 	database.Db.Raw("select id,phone from users where email=?", useremail).Scan(&user)
 	var order models.Orders
-	database.Db.Where("users_id= ?", user.ID).First(&order)
-	database.Db.Model(&models.Orders{}).Where("orderid = ?", order.Orderid).Update("paymentstatus=?", true)
-
+	database.Db.Where("users_id= ? and payment_method=?", user.ID, "razorpay").First(&order)
 	client := razorpay.NewClient("rzp_test_Nfnipdccvgb8fW", "UfwKXCGjiUrcfTEXpWlupcrN")
 	razpayvalue := order.TotalAmount * 100
 	data := map[string]interface{}{
