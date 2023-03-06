@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"ga/pkg/database"
 	"ga/pkg/models"
+	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -15,7 +16,20 @@ func RazorPay(c *gin.Context) {
 	useremail := c.GetString("user")
 	database.Db.Raw("select id,phone from users where email=?", useremail).Scan(&user)
 	var order models.Orders
-	database.Db.Where("users_id= ? and payment_method=? and paymentstatus=?", user.ID, "razorpay", false).First(&order)
+	err1 := database.Db.Where("users_id= ? and payment_method=? and paymentstatus=?", user.ID, "razorpay", false).First(&order)
+	if err1.Error != nil {
+		c.JSON(404, gin.H{
+			"msg": "error creating order",
+		})
+		return
+	}
+	err2 := database.Db.Raw("update orders set paymentstatus=? where orderid=?", true, order.Orderid)
+	if err2.Error != nil {
+		c.JSON(404, gin.H{
+			"msg": " no order",
+		})
+		return
+	}
 	client := razorpay.NewClient("rzp_test_Nfnipdccvgb8fW", "UfwKXCGjiUrcfTEXpWlupcrN")
 	razpayvalue := order.TotalAmount * 100
 	data := map[string]interface{}{
@@ -29,9 +43,9 @@ func RazorPay(c *gin.Context) {
 		c.JSON(404, gin.H{
 			"msg": "error creating order",
 		})
+		return
 	}
 	c.HTML(200, "app.html", gin.H{
-
 		"UserID":       user.ID,
 		"total_price":  order.TotalAmount,
 		"total":        razpayvalue,
@@ -46,36 +60,38 @@ func RazorPay(c *gin.Context) {
 		})
 	}
 }
-
 func RazorpaySuccess(c *gin.Context) {
+	userEmail := c.GetString("user")
 	var user models.Users
-	useremail := c.GetString("user")
-	database.Db.Raw("select id,phone from users where email=?", useremail).Scan(&user)
-	userid := c.Query("user_id")
-	userID, _ := strconv.Atoi(userid)
-	orderid := c.Query("order_id")
+	database.Db.Raw("SELECT id, phone FROM users WHERE email = ?", userEmail).Scan(&user)
+
+	userID, _ := strconv.Atoi(c.Query("user_id"))
+	orderID := c.Query("order_id")
 	signature := c.Query("signature")
+
 	var order models.Orders
-	database.Db.Where("users_id= ? and payment_method=? and paymentstatus=?", user.ID, "razorpay", false).First(&order)
-	database.Db.Raw("update orders set paymentstatus=? where orderid=?", true, order.Orderid)
-	Rpay := models.RazorPay{
+	database.Db.Where("users_id = ? AND payment_method = ? AND paymentstatus = ?", user.ID, "razorpay", false).First(&order)
+
+	database.Db.Model(&order).Update("paymentstatus", true)
+
+	rpay := models.RazorPay{
 		UserID:          uint(userID),
-		RazorPaymentId:  orderid,
+		RazorPaymentId:  orderID,
 		Signature:       signature,
 		RazorPayOrderID: order.Orderid,
 		AmountPaid:      order.TotalAmount,
 	}
-	err := database.Db.Create(&Rpay)
-	if err.Error != nil {
-		fmt.Println("error")
+	if err := database.Db.Create(&rpay).Error; err != nil {
+		fmt.Println(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+		return
 	}
-	c.JSON(200, gin.H{
 
-		"status": true,
-	})
-
+	c.JSON(http.StatusOK, gin.H{"status": true})
 }
+
 func Success(c *gin.Context) {
+
 	c.HTML(200, "success.html", nil)
 
 }

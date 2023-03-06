@@ -31,7 +31,6 @@ func OtpLog(c *gin.Context) {
 	accountSid = os.Getenv("ACCOUNT_SID")
 	authToken = os.Getenv("AUTH_TOCKEN")
 	fromPhone = os.Getenv("SID")
-	fmt.Println(accountSid)
 	client = twilio.NewRestClientWithParams(twilio.ClientParams{
 		Username: accountSid,
 		Password: authToken,
@@ -59,8 +58,10 @@ func OtpLog(c *gin.Context) {
 	}
 	mobile := "+91" + input.Number
 	params := &verify.CreateVerificationParams{}
+
 	params.SetTo(mobile)
 	params.SetChannel("sms")
+
 	resp, err := client.VerifyV2.CreateVerification(fromPhone, params)
 	if err != nil {
 		fmt.Println(err.Error())

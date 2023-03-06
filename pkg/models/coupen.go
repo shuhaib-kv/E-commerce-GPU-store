@@ -1,10 +1,15 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
 
 type Coupon struct {
 	gorm.Model
 	CouponName       string
 	CouponCode       string
 	CouponPercentage uint
+	ExpiryDate       time.Time
 }

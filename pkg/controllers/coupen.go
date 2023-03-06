@@ -4,6 +4,7 @@ import (
 	"ga/pkg/database"
 	"ga/pkg/models"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,6 +15,7 @@ func AddCoupon(c *gin.Context) {
 		CouponName       string `json:"couponname"`
 		CouponCode       string `json:"couponcode"`
 		CouponPercentage uint   `json:"couponpercentage"`
+		Expiresat        uint   `json:"expiresat"`
 	}
 	err := c.ShouldBindJSON(&body)
 	if err != nil {
@@ -24,12 +26,11 @@ func AddCoupon(c *gin.Context) {
 		})
 		return
 	}
-	// couponName := c.PostForm("couponName")
-	// couponCode := c.PostForm("")
-	// Percentage := c.PostForm("couponPercentage")
-	// couponPercentage, _ := strconv.Atoi(Percentage)
-
-	coupon := models.Coupon{CouponName: body.CouponName, CouponCode: body.CouponCode, CouponPercentage: body.CouponPercentage}
+	coupon := models.Coupon{CouponName: body.CouponName,
+		CouponCode:       body.CouponCode,
+		CouponPercentage: body.CouponPercentage,
+		ExpiryDate:       time.Now().AddDate(0, 0, int(body.Expiresat)),
+	}
 
 	var checkCoup []models.Coupon
 	database.Db.Find(&checkCoup)
@@ -67,7 +68,6 @@ func DeleteCoupon(c *gin.Context) {
 	var coupon models.Coupon
 	couponName := c.Query("couponName")
 	database.Db.Where("coupon_name = ?", couponName).Delete(&coupon)
-	//database.DB.Raw("DELETE FROM coupons WHERE coupon_name=?", couponName).Scan(&coupon)
 	c.JSON(200, gin.H{
 		"status":  true,
 		"message": "Deleted succesfully",

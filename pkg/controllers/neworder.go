@@ -23,7 +23,9 @@ const (
 func OrderCart(c *gin.Context) {
 	var body struct {
 		Paymentmethod PaymentMethod `json:"payment_method" binding:"required,oneof=cod razorpay"`
-		Address       uint          `json:"address"`
+		Address       uint          `json:"address" binding:"required"`
+		Applaywallet  bool          `json:"applaywallet"`
+		Coupen        uint          `json:"coupen"`
 	}
 
 	if err := c.ShouldBindJSON(&body); err != nil {
@@ -70,6 +72,7 @@ func OrderCart(c *gin.Context) {
 		})
 		return
 	}
+
 	if body.Paymentmethod == PaymentMethodCOD {
 		if _, err := createOrder(cart.ID, userID, body.Address, string(body.Paymentmethod)); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
@@ -210,7 +213,6 @@ func createOrder(cartID uint, userID uint, addressID uint, paymentMethod string)
 
 		return &response, nil
 	}
-
 }
 
 type OrderItemResponse struct {
