@@ -162,23 +162,19 @@ func AdminLogin(c *gin.Context) {
 		return
 	}
 
-	ts, err := middleware.CreateToken(uint64(admin.ID))
+	tokenstring, err := middleware.GenerateJWT(body.Email, admin.ID)
+
+	c.SetCookie("Adminjwt", tokenstring, 3600*24*30, "", "", false, true)
 	if err != nil {
-		c.JSON(http.StatusUnprocessableEntity, err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.Abort()
 		return
 	}
-	saveErr := middleware.CreateAuth(uint64(admin.ID), ts)
-	if saveErr != nil {
-		c.JSON(http.StatusUnprocessableEntity, saveErr.Error())
-	}
-	tokens := map[string]string{
-		"access_token":  ts.AccessToken,
-		"refresh_token": ts.RefreshToken,
-	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"status":  true,
 		"message": "ok",
-		"data":    tokens,
+		"data":    tokenstring,
 	})
 
 }

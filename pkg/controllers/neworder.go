@@ -83,7 +83,7 @@ func OrderCart(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"status":  true,
 			"message": fmt.Sprintf("Order placed successfully with payment method %s", body.Paymentmethod),
-			"data":    "",
+			"data":    fmt.Sprintf("Order placed Expected Delivery Before %s", time.Now().AddDate(0, 0, 12)),
 		})
 		return
 	}
@@ -107,8 +107,9 @@ func OrderCart(c *gin.Context) {
 }
 
 type CreateOrderResponse struct {
-	OrderID string `json:"order_id"`
-	Amount  uint   `json:"amount"`
+	OrderID      string `json:"order_id"`
+	Amount       uint   `json:"amount"`
+	Deliverydate time.Time
 }
 
 func createOrder(cartID uint, userID uint, addressID uint, paymentMethod string) (*CreateOrderResponse, error) {
@@ -123,13 +124,14 @@ func createOrder(cartID uint, userID uint, addressID uint, paymentMethod string)
 			totalAmount += cp.Quantity * cp.ProductPrice
 		}
 		order := models.Orders{
-			UsersID:       userID,
-			AddressID:     addressID,
-			Orderid:       uuid.New().String(),
-			PaymentMethod: paymentMethod,
-			TotalAmount:   totalAmount,
-			Status:        true,
-			Paymentstatus: false,
+			UsersID:              userID,
+			AddressID:            addressID,
+			Orderid:              uuid.New().String(),
+			PaymentMethod:        paymentMethod,
+			TotalAmount:          totalAmount,
+			Status:               true,
+			Paymentstatus:        false,
+			ExpectedDeliveryDate: time.Now().AddDate(0, 0, 12),
 		}
 		if err := database.Db.Create(&order).Error; err != nil {
 			return nil, err
@@ -199,8 +201,9 @@ func createOrder(cartID uint, userID uint, addressID uint, paymentMethod string)
 		}
 
 		response := CreateOrderResponse{
-			OrderID: order.Orderid,
-			Amount:  totalAmount,
+			OrderID:      order.Orderid,
+			Amount:       totalAmount,
+			Deliverydate: order.ExpectedDeliveryDate,
 		}
 
 		return &response, nil

@@ -1,16 +1,21 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
 
 type Orders struct {
 	gorm.Model
-	UsersID       uint
-	AddressID     uint
-	Orderid       string
-	PaymentMethod string
-	TotalAmount   uint
-	Status        bool
-	Paymentstatus bool
+	UsersID              uint
+	AddressID            uint
+	Orderid              string
+	PaymentMethod        string
+	TotalAmount          uint
+	Status               bool
+	Paymentstatus        bool
+	ExpectedDeliveryDate time.Time
 }
 
 type Ordereditems struct {

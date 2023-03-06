@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"errors"
-	"fmt"
 	"ga/middleware"
 	"ga/pkg/database"
 	"ga/pkg/models"
@@ -13,93 +12,134 @@ import (
 )
 
 func UserSignUp(c *gin.Context) {
+	type userInput struct {
+		FirstName   string `json:"firstname" binding:"required"`
+		LastName    string `json:"lastname" binding:"required"`
+		UserName    string `json:"username" binding:"required"`
+		Email       string `json:"email" binding:"required"`
+		Password    string `json:"password" binding:"required"`
+		PhoneNumber string `json:"phone" binding:"required"`
+	}
 
-	First_Name := c.PostForm("firstname")
-	Last_Name := c.PostForm("lastname")
-	User_Name := c.PostForm("username")
-	Email := c.PostForm("email")
-	Password := c.PostForm("password")
-	HashPass := HashPassword(Password)
-	Phone_Number := c.PostForm("phoneno")
-	user := models.Users{FirstName: First_Name, LastName: Last_Name, UserName: User_Name, Email: Email, Password: HashPass, Phone: Phone_Number, Block_status: false}
+	var input userInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusNotAcceptable, gin.H{
+			"status":  false,
+			"message": "check json input",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	HashPass := HashPassword(input.Password)
+	user := models.Users{
+		FirstName:    input.FirstName,
+		LastName:     input.LastName,
+		UserName:     input.UserName,
+		Email:        input.Email,
+		Password:     HashPass,
+		Phone:        input.PhoneNumber,
+		Block_status: false,
+	}
+
 	var check []models.Users
 	database.Db.Find(&check)
 	for _, i := range check {
 		if i.Email == user.Email {
-			c.JSON(http.StatusBadRequest, gin.H{
+			c.JSON(http.StatusNotAcceptable, gin.H{
 				"status":  false,
-				"message": "email Already Exist",
+				"message": "change email or email already exist",
+				"error":   "email Already Exist",
 			})
 			return
 		}
 	}
 	for _, i := range check {
 		if i.UserName == user.UserName {
-			c.JSON(http.StatusBadRequest, gin.H{
+			c.JSON(http.StatusNotAcceptable, gin.H{
 				"status":  false,
-				"message": "Username Already Exist",
+				"error":   "Username Already Exist",
+				"message": "Try another user name this user name is taken",
 			})
 			return
 		}
 	}
-	if user.FirstName == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Name is required",
-		})
-		return
-	}
-	if user.Email == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Email is required",
-		})
-		return
-	}
-	if user.Password == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Password is required",
-		})
 
-		return
-	}
 	result := database.Db.Create(&user)
 	if result.Error != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Failed to create user",
+		c.JSON(http.StatusNotAcceptable, gin.H{
+			"status":  false,
+			"error":   "Blank input",
+			"message": "Failed to create user",
 		})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{
+
+	c.JSON(http.StatusAccepted, gin.H{
+		"status":  true,
 		"message": "Account Created",
+		"data":    "welcome to GPU-Ecom",
 	})
+
 	var users models.Users
-	database.Db.First(&users, "email = ?", Email)
+	database.Db.First(&users, "email = ?", input.Email)
 	wallet := models.Wallet{UsersID: users.ID, Balance: 0}
 	database.Db.Create(&wallet)
+
 	var cart = models.Cart{
 		User_id: user.ID,
 	}
 	database.Db.Create(&cart)
-
 }
+
+type LoginRequest struct {
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required"`
+}
+
+type LoginResponse struct {
+	Email string `json:"email"`
+	Token string `json:"token"`
+}
+
 func UserLogin(c *gin.Context) {
-	Email := c.PostForm("email")
-	Password := c.PostForm("password")
-	HashPassword(Password)
+	var req LoginRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusNotAcceptable, gin.H{
+			"error":   err.Error(),
+			"message": "input error",
+			"status":  false,
+		})
+		return
+	}
+
 	var user models.Users
-	record := database.Db.Raw("select * from users where email=?", Email).Scan(&user)
+	record := database.Db.Raw("select * from users where email=?", req.Email).Scan(&user)
 	if record.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": record.Error.Error()})
+		c.JSON(http.StatusNotAcceptable, gin.H{
+			"error":   record.Error.Error(),
+			"message": "user not found",
+			"status":  false,
+		})
 		c.Abort()
 		return
 	}
 	if user.Block_status {
-		c.JSON(404, gin.H{"msg": "user has been blocked By admin"})
+		c.JSON(http.StatusNotAcceptable, gin.H{
+			"error":   "user blocked",
+			"status":  false,
+			"message": "user has been blocked By admin",
+		})
 		c.Abort()
 		return
 	}
-	credentialcheck := user.CheckPassword(Password)
+	credentialcheck := user.CheckPassword(req.Password)
 	if credentialcheck != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid Password"})
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error":   "invalid Password",
+			"status":  false,
+			"message": "try again",
+		})
 		c.Abort()
 		return
 	}
@@ -111,7 +151,16 @@ func UserLogin(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, gin.H{"email": Email, "password": Password, "token": tokenString})
+	res := LoginResponse{
+		Email: req.Email,
+		Token: tokenString,
+	}
+	c.JSON(http.StatusAccepted, gin.H{
+		"status":  true,
+		"data":    res,
+		"message": "welcome",
+	})
+
 }
 
 func UserHome(c *gin.Context) {
@@ -120,53 +169,56 @@ func UserHome(c *gin.Context) {
 }
 
 func AddAddress(c *gin.Context) {
-	// Name := c.PostForm("name")
-	// Phone_number := c.PostForm("phone")
-	// pho, _ := strconv.Atoi(Phone_number)
-	// Pincodeu := c.PostForm("pincode")
-	// pin, _ := strconv.Atoi(Pincodeu)
-	// House := c.PostForm("house")
-	// Area := c.PostForm("area")
-	// Landmark := c.PostForm("landmark")
-	// City := c.PostForm("city")
+
+	type AddressInput struct {
+		Name         string `json:"name" binding:"required"`
+		Phone_number uint   `json:"phone_number" binding:"required"`
+		Pincode      uint   `json:"pincode" binding:"required"`
+		House        string `json:"house" binding:"required"`
+		Area         string `json:"area" binding:"required"`
+		Landmark     string `json:"landmark" binding:"required"`
+		City         string `json:"city" binding:"required"`
+	}
+
+	var input AddressInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
 	useremail := c.GetString("user")
-	fmt.Println(useremail)
 	var UsersID uint
 	err := database.Db.Raw("select id from users where email=?", useremail).Scan(&UsersID)
 	if errors.Is(err.Error, gorm.ErrRecordNotFound) {
-		c.JSON(http.StatusOK, gin.H{
+		c.JSON(http.StatusNotAcceptable, gin.H{
 			"message": "user coudnt find",
+			"error":   err,
+			"status":  false,
 		})
-	}
-	var body struct {
-		Name         string
-		Phone_number uint
-		Pincode      uint
-		House        string
-		Area         string
-		Landmark     string
-		City         string
-	}
-	c.Bind(&body)
-	address := models.Address{
-		UserId:       UsersID,
-		Name:         body.Name,
-		Phone_number: body.Phone_number,
-		Pincode:      body.Pincode,
-		Area:         body.Area,
-		House:        body.House,
-		Landmark:     body.Landmark,
-		City:         body.City,
-	}
-	record := database.Db.Create(&address)
-	if record.Error != nil {
-		c.JSON(404, gin.H{"error": record.Error.Error()})
-		c.Abort()
 		return
 	}
-	c.JSON(200, gin.H{
-		"Adress Added": address,
-	})
+
+	address := models.Address{
+		UserId:       UsersID,
+		Name:         input.Name,
+		Phone_number: input.Phone_number,
+		Pincode:      input.Pincode,
+		Area:         input.Area,
+		House:        input.House,
+		Landmark:     input.Landmark,
+		City:         input.City,
+	}
+
+	record := database.Db.Create(&address)
+	if record.Error != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": record.Error.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  true,
+		"message": "Address added successfully",
+		"data":    address})
 }
 
 func ShowAddress(c *gin.Context) {
@@ -191,95 +243,32 @@ func ShowAddress(c *gin.Context) {
 	}
 	record := database.Db.Select("address_id", "user_id", "name", "phone_number", "pincode", "house", "area", "landmark", "city").Table("addresses").Where("user_id=?", UsersID).Find(&Adress)
 	if record.Error != nil {
-		c.JSON(404, gin.H{
-			"error": record.Error.Error(),
+		c.JSON(http.StatusNotAcceptable, gin.H{
+			"status":  false,
+			"message": "change fields",
+			"error":   record.Error.Error(),
 		})
 	}
 
-	c.JSON(200, gin.H{
-		"address": Adress,
+	c.JSON(http.StatusAccepted, gin.H{
+		"status":  true,
+		"message": "added address",
+		"data":    Adress,
 	})
-
-}
-func SelectAddress(c *gin.Context) {
-	useremail := c.GetString("user")
-	var UsersID uint
-	err := database.Db.Raw("select id from users where email=?", useremail).Scan(&UsersID)
-	if errors.Is(err.Error, gorm.ErrRecordNotFound) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "user coudnt find",
-		})
-
-	}
-	var address []models.Address
-	database.Db.Where("addresses.users_id = ?", UsersID).Find(&address)
-	for _, i := range address {
-		c.JSON(200, gin.H{
-			"Name":          i.Name,
-			"Phone Number":  i.Phone_number,
-			"Pincode":       i.Pincode,
-			"House Address": i.House,
-			"Area":          i.Area,
-			"Landmark":      i.Landmark,
-			"City":          i.City,
-			"id":            i.Address_id,
-		})
-	}
 }
 
 func EditAddress(c *gin.Context) {
-	useremail := c.GetString("user")
-	adress := c.Param("id")
-	var UsersID uint
-	err := database.Db.Raw("select id from users where email=?", useremail).Scan(&UsersID)
-	if errors.Is(err.Error, gorm.ErrRecordNotFound) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "user coudnt find",
-		})
-
-	}
-	var body struct {
-		Name         string
-		Phone_number uint
-		Pincode      uint
-		House_Adress string
-		Area         string
-		Landmark     string
-		City         string
-	}
-
-	c.Bind(&body)
-
-	var Address []models.Address
-
-	results := database.Db.First(&Address, adress)
-	if results.Error != nil {
-		c.JSON(400, gin.H{
-			"ststus":  false,
-			"message": " Address id doesn't exist ",
-		})
+	var address models.Address
+	if err := c.ShouldBindJSON(&address); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	result := database.Db.Model(&Address).Updates(models.Address{
-		Name:         body.Name,
-		Phone_number: body.Phone_number,
-		Pincode:      body.Pincode,
-		House:        body.House_Adress,
-		Area:         body.Area,
-		Landmark:     body.Landmark,
-		City:         body.City,
-	})
-	if result != nil {
-		c.JSON(400, gin.H{
-			"ststus":  false,
-			"message": "  can,t edit your database  ",
-		})
-	} else {
-		c.JSON(200, gin.H{
-			"ststus":  true,
-			"message": "Address updated",
-		})
+	if err := database.Db.Model(&models.Address{}).Where("id = ?", address.ID).Updates(&address).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Address updated successfully"})
 
 }

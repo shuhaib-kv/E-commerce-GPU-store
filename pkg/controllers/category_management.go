@@ -124,7 +124,6 @@ func ViewCategory(c *gin.Context) {
 //		}
 //	}
 func ViewProductByCategory(c *gin.Context) {
-	// Get category ID from URL parameter
 	var reqBody struct {
 		Id int `json:"id" binding:"required"`
 	}
@@ -135,11 +134,9 @@ func ViewProductByCategory(c *gin.Context) {
 		})
 		return
 	}
-	// Get all products in the specified category
 	var products []models.Product
 	database.Db.Find(&products, "id = ?", reqBody.Id)
 
-	// Return products as JSON response
 	var productJSON []gin.H
 	for _, p := range products {
 		productJSON = append(productJSON, gin.H{
