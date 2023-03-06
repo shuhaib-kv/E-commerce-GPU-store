@@ -36,11 +36,20 @@ func OtpLog(c *gin.Context) {
 		Username: accountSid,
 		Password: authToken,
 	})
-	Mob := c.PostForm("number")
+	type userInput struct {
+		Number string `json:"number" binding:"required,min=10,max=10"`
+	}
 
-	result := ChekNumber(Mob)
-	fmt.Println(result)
-
+	var input userInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusNotAcceptable, gin.H{
+			"status":  false,
+			"message": "check json input",
+			"error":   err.Error(),
+		})
+		return
+	}
+	result := ChekNumber(input.Number)
 	if !result {
 		c.JSON(400, gin.H{
 			"status":  false,
@@ -48,7 +57,7 @@ func OtpLog(c *gin.Context) {
 		})
 		return
 	}
-	mobile := "+91" + Mob
+	mobile := "+91" + input.Number
 	params := &verify.CreateVerificationParams{}
 	params.SetTo(mobile)
 	params.SetChannel("sms")
@@ -71,7 +80,6 @@ func OtpLog(c *gin.Context) {
 }
 
 func ChekNumber(str string) bool {
-
 	mobilenumber := str
 	var checkOtp models.Users
 	database.Db.Raw("SELECT phone FROM users WHERE phone=?", mobilenumber).Scan(&checkOtp)
@@ -86,19 +94,31 @@ func CheckOtp(c *gin.Context) {
 		Username: accountSid,
 		Password: authToken,
 	})
-	Mob := c.PostForm("number")
-	code := c.PostForm("otps")
-	fmt.Println(Mob)
-	ChekNumber(Mob)
-	var user models.Users
-	database.Db.First(&user, "phone = ?", Mob)
+	type userInput struct {
+		Number string `json:"number" binding:"required,min=10,max=10"`
+		Otp    string `json:"otp" binding:"required,min=3"`
+	}
 
-	mobile := "+91" + Mob
+	var input userInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusNotAcceptable, gin.H{
+			"status":  false,
+			"message": "check json input",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	ChekNumber(input.Number)
+	var user models.Users
+	database.Db.First(&user, "phone = ?", input.Number)
+
+	mobile := "+91" + input.Number
 	fromPhone = os.Getenv("SID")
 	fmt.Println(mobile)
 	params := &verify.CreateVerificationCheckParams{}
 	params.SetTo(mobile)
-	params.SetCode(code)
+	params.SetCode(input.Otp)
 
 	resp, err := client.VerifyV2.CreateVerificationCheck(fromPhone, params)
 

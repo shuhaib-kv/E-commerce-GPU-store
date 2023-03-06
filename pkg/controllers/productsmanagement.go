@@ -116,69 +116,6 @@ func AdminAddProduct(c *gin.Context) {
 	})
 }
 
-// func AdminAddProduct(c *gin.Context) {
-// 	// Parse request parameters
-// 	var product models.Product
-// 	if err := c.ShouldBind(&product); err != nil {
-// 		c.JSON(http.StatusBadRequest, gin.H{
-// 			"status":  false,
-// 			"message": "Invalid request parameters",
-// 		})
-// 		return
-// 	}
-
-// 	// Check if product with the same ModelNo already exists
-// 	var check []models.Product
-// 	database.Db.Where("model_no = ?", product.ModelNo).Find(&check)
-// 	if len(check) > 0 {
-// 		c.JSON(http.StatusBadRequest, gin.H{
-// 			"status":  false,
-// 			"message": "Product already exists",
-// 		})
-// 		return
-// 	}
-
-// 	// Save uploaded images
-// 	for i := 1; i <= 3; i++ {
-// 		file, err := c.FormFile(fmt.Sprintf("image%d", i))
-// 		if err != nil {
-// 			continue
-// 		}
-
-// 		extension := filepath.Ext(file.Filename)
-// 		filename := uuid.New().String() + extension
-// 		if err := c.SaveUploadedFile(file, "./public/images/"+filename); err != nil {
-// 			c.JSON(http.StatusInternalServerError, gin.H{
-// 				"status":  false,
-// 				"message": "Failed to save image file",
-// 			})
-// 			return
-// 		}
-
-// 		switch i {
-// 		case 1:
-// 			product.Image1 = filename
-// 		case 2:
-// 			product.Image2 = filename
-// 		case 3:
-// 			product.Image3 = filename
-// 		}
-// 	}
-
-// 	// Add product to database
-// 	if err := database.Db.Create(&product).Error; err != nil {
-// 		c.JSON(http.StatusInternalServerError, gin.H{
-// 			"status":  false,
-// 			"message": "Failed to add product",
-// 		})
-// 		return
-// 	}
-
-//		c.JSON(http.StatusOK, gin.H{
-//			"status":  true,
-//			"message": "Product added successfully",
-//		})
-//	}
 func EditProduct(c *gin.Context) {
 	id := c.Param("id")
 	ID, _ := strconv.Atoi(id)

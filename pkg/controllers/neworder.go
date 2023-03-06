@@ -179,7 +179,7 @@ func createOrder(cartID uint, userID uint, addressID uint, paymentMethod string)
 			PaymentMethod: paymentMethod,
 			TotalAmount:   totalAmount,
 			Status:        true,
-			Paymentstatus: true,
+			Paymentstatus: false,
 		}
 		if err := database.Db.Create(&order).Error; err != nil {
 			return nil, err
