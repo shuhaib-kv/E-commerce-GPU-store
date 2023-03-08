@@ -12,9 +12,9 @@ import (
 
 func AdminSignup(c *gin.Context) {
 	var body struct {
-		Name     string
-		Email    string
-		Password string
+		Name     string `json:"name"`
+		Email    string `json:"email"`
+		Password string `json:"password"`
 	}
 	err := c.ShouldBindJSON(&body)
 	if err != nil {

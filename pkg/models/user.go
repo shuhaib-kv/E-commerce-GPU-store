@@ -44,12 +44,12 @@ func (user *Users) CheckPassword(providedPassword string) error {
 type Address struct {
 	gorm.Model
 
-	UserId       uint   `json:"user_id"  gorm:"not null" `
-	Name         string `json:"name"  gorm:"not null" `
-	Phone_number uint   `json:"phone_number"  gorm:"not null" `
-	Pincode      uint   `json:"pincode"  gorm:"not null" `
-	House        string `json:"house"   `
-	Area         string `json:"area"   `
-	Landmark     string `json:"landmark"  gorm:"not null" `
-	City         string `json:"city"  gorm:"not null" `
+	UserId       uint
+	Name         string
+	Phone_number uint
+	Pincode      uint
+	House        string
+	Area         string
+	Landmark     string
+	City         string
 }

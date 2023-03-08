@@ -209,7 +209,6 @@ type ProductFilter struct {
 }
 
 func ViewProducts(c *gin.Context) {
-	// Parse the filter parameters from the request query string
 	var filter ProductFilter
 	if err := c.BindQuery(&filter); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -220,7 +219,6 @@ func ViewProducts(c *gin.Context) {
 		return
 	}
 
-	// Set default values for the filter parameters if they are not provided
 	if filter.PageSize == 0 {
 		filter.PageSize = 10
 	}
@@ -228,7 +226,6 @@ func ViewProducts(c *gin.Context) {
 		filter.PageIndex = 1
 	}
 
-	// Build the query to retrieve the products based on the filter parameters
 	query := database.Db.Model(&models.Product{})
 	if filter.Name != "" {
 		query = query.Where("name iLIKE ?", "%"+filter.Name+"%")
@@ -247,7 +244,6 @@ func ViewProducts(c *gin.Context) {
 			Where("categories.name = ?", filter.Category)
 	}
 
-	// Paginate the results based on the filter parameters
 	var totalProducts int64
 	query.Count(&totalProducts)
 	totalPages := int(math.Ceil(float64(totalProducts) / float64(filter.PageSize)))
@@ -255,7 +251,6 @@ func ViewProducts(c *gin.Context) {
 	var products []models.Product
 	query.Offset(offset).Limit(filter.PageSize).Find(&products)
 
-	// Build the response payload
 	var productJSON []gin.H
 	for _, product := range products {
 		productJSON = append(productJSON, gin.H{

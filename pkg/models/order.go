@@ -20,9 +20,9 @@ type Orders struct {
 
 type Ordereditems struct {
 	gorm.Model
-	OrderID     string `json:"order_id"`
-	ProductID   uint   `json:"product_id"`
-	ProductName string `json:"product_name"`
-	Quantity    uint   `json:"quantity"`
-	Price       uint   `json:"price"`
+	OrderID     string
+	ProductID   uint
+	ProductName string
+	Quantity    uint
+	Price       uint
 }

@@ -6,32 +6,32 @@ import (
 
 type Product struct {
 	gorm.Model
-	Name                  string `json:"name"`
-	Price                 uint   `json:"price"`
+	Name                  string
+	Price                 uint
 	ModelNo               uint
 	Image1                string
 	Image2                string
 	Image3                string
-	Stock                 uint `json:"stock"`
+	Stock                 uint
 	CategoryID            uint
-	Description           string `json:"description"`
-	Brand                 string `json:"brand"`
-	Chipset_brand         string `json:"chipset_brand"`
-	Model_gpu             string `json:"model_gpu"`
-	Series                string `json:"series"`
-	Generation            string `json:"generation"`
-	Memmory_type          string `json:"memmory_type"`
-	Thermal_design_power  string `json:"thermal_design_power"`
-	Released              string `json:"released"`
-	Architecture          string `json:"architecture"`
-	Memmory_size          uint   `json:"memmory_size"`
-	Recomented_resolution string `json:"recomented_resolution"`
-	DirectX               string `json:"directx"`
-	Memmory_bus_width     string `json:"memmory_bus_width"`
-	Production_status     string `json:"production_status"`
-	Text_mapping_unit     string `json:"text_mapping unit"`
-	Slots                 string `json:"slots"`
-	Rops                  string `json:"rops"`
-	Power_Connecters      string `json:"powerconnecters"`
-	Discount              uint   `json:"discount"`
+	Description           string
+	Brand                 string
+	Chipset_brand         string
+	Model_gpu             string
+	Series                string
+	Generation            string
+	Memmory_type          string
+	Thermal_design_power  string
+	Released              string
+	Architecture          string
+	Memmory_size          uint
+	Recomented_resolution string
+	DirectX               string
+	Memmory_bus_width     string
+	Production_status     string
+	Text_mapping_unit     string
+	Slots                 string
+	Rops                  string
+	Power_Connecters      string
+	Discount              uint
 }

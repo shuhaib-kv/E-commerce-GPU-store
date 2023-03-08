@@ -28,7 +28,6 @@ func ConnectDB() {
 		&models.CartProducts{},
 		&models.Orders{},
 		&models.Address{},
-		&models.Paymentmethod{},
 		&models.Ordereditems{},
 		&models.RazorPay{},
 		&models.Discount{},

@@ -9,7 +9,6 @@ import (
 )
 
 func AddCategory(c *gin.Context) {
-	// Parse request body
 	var reqBody struct {
 		Name string `json:"name" binding:"required"`
 	}
@@ -17,11 +16,10 @@ func AddCategory(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"status":  false,
 			"message": "Invalid request body",
+			"error":   err,
 		})
 		return
 	}
-
-	// Check if category with the same name already exists
 	var count int64
 	database.Db.Model(&models.Category{}).Where("name = ?", reqBody.Name).Count(&count)
 	if count > 0 {
@@ -31,18 +29,15 @@ func AddCategory(c *gin.Context) {
 		})
 		return
 	}
-
-	// Create the new category
 	category := models.Category{Name: reqBody.Name}
 	if err := database.Db.Create(&category).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status":  false,
 			"message": "Failed to create category",
+			"error":   err,
 		})
 		return
 	}
-
-	// Return success response
 	c.JSON(http.StatusOK, gin.H{
 		"status":  true,
 		"message": "Category added",
@@ -51,18 +46,17 @@ func AddCategory(c *gin.Context) {
 }
 
 func ViewCategory(c *gin.Context) {
-	// Get all categories from database
 	var categories []models.Category
 	result := database.Db.Find(&categories)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status":  false,
 			"message": "Failed to retrieve categories",
+			"error":   result.Error,
 		})
 		return
 	}
 
-	// Build JSON response
 	var categoriesJSON []gin.H
 	for _, category := range categories {
 		categoryJSON := gin.H{
@@ -72,11 +66,10 @@ func ViewCategory(c *gin.Context) {
 		categoriesJSON = append(categoriesJSON, categoryJSON)
 	}
 
-	// Return JSON response
 	c.JSON(http.StatusOK, gin.H{
-		"status":     true,
-		"message":    "fetched all categories",
-		"categories": categoriesJSON,
+		"status":  true,
+		"message": "fetched all categories",
+		"data":    categoriesJSON,
 	})
 }
 func ViewProductByCategory(c *gin.Context) {
@@ -87,6 +80,7 @@ func ViewProductByCategory(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"status":  false,
 			"message": "Invalid request body",
+			"error":   err,
 		})
 		return
 	}
@@ -119,6 +113,7 @@ func EditCategory(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"status":  false,
 			"message": "Invalid request body",
+			"error":   err,
 		})
 		return
 	}
@@ -128,6 +123,7 @@ func EditCategory(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"status":  false,
 			"message": "Category not found",
+			"error":   result.Error,
 		})
 		return
 	}
@@ -137,6 +133,7 @@ func EditCategory(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"status":  false,
 			"message": "Failed to update category",
+			"error":   result.Error,
 		})
 		return
 	}
@@ -156,14 +153,12 @@ func DeletECategory(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"status":  false,
 			"message": "Invalid request body",
+			"error":   err,
 		})
 		return
 	}
 
-	// Delete category from database
 	database.Db.Delete(&models.Category{}, reqBody.ID)
-
-	// Return success response
 	c.JSON(http.StatusOK, gin.H{
 		"status":  true,
 		"message": "Category deleted successfully",
