@@ -25,7 +25,7 @@ func OrderCart(c *gin.Context) {
 		Paymentmethod PaymentMethod `json:"payment_method" binding:"required,oneof=cod razorpay"`
 		Address       uint          `json:"address" binding:"required"`
 		Applaywallet  bool          `json:"applaywallet"`
-		Coupen        uint          `json:"coupen"`
+		Coupen        string        `json:"coupen"`
 	}
 
 	if err := c.ShouldBindJSON(&body); err != nil {
@@ -74,7 +74,7 @@ func OrderCart(c *gin.Context) {
 	}
 
 	if body.Paymentmethod == PaymentMethodCOD {
-		if _, err := createOrder(cart.ID, userID, body.Address, string(body.Paymentmethod)); err != nil {
+		if _, err := createOrder(cart.ID, userID, body.Address, string(body.Paymentmethod), body.Coupen, body.Applaywallet); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"status":  false,
 				"message": "Failed to create order",
@@ -91,7 +91,7 @@ func OrderCart(c *gin.Context) {
 		return
 	}
 	if body.Paymentmethod == PaymentMethodRazorpay {
-		if _, err := createOrder(cart.ID, userID, body.Address, string(body.Paymentmethod)); err != nil {
+		if _, err := createOrder(cart.ID, userID, body.Address, string(body.Paymentmethod), body.Coupen, body.Applaywallet); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"status":  false,
 				"message": "Failed to create order",
@@ -115,7 +115,7 @@ type CreateOrderResponse struct {
 	Deliverydate time.Time
 }
 
-func createOrder(cartID uint, userID uint, addressID uint, paymentMethod string) (*CreateOrderResponse, error) {
+func createOrder(cartID uint, userID uint, addressID uint, paymentMethod string, coupen string, applaywallet bool) (*CreateOrderResponse, error) {
 	if paymentMethod == "cod" {
 		var cartProducts []models.CartProducts
 		if err := database.Db.Where("cartid = ?", cartID).Find(&cartProducts).Error; err != nil {
@@ -125,6 +125,46 @@ func createOrder(cartID uint, userID uint, addressID uint, paymentMethod string)
 		var totalAmount uint
 		for _, cp := range cartProducts {
 			totalAmount += cp.ProductPrice
+		}
+
+		var coupon models.Coupon
+		if coupen != "" {
+			if err := database.Db.Where("coupon_code = ?", coupen).First(&coupon).Error; err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					return nil, errors.New("invalid coupon code")
+				}
+				return nil, err
+			}
+			if time.Now().After(coupon.ExpiryDate) {
+				return nil, errors.New("coupon has expired")
+			}
+			discount := (coupon.CouponPercentage * totalAmount) / 100
+			totalAmount -= discount
+		}
+
+		var balance uint
+		if applaywallet {
+			var wallet models.Wallet
+			if err := database.Db.Where("users_id = ?", userID).First(&wallet).Error; err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					return nil, errors.New("user wallet not found")
+				}
+				return nil, err
+			}
+			if wallet.Balance < totalAmount {
+				return nil, errors.New("insufficient wallet balance")
+			}
+			balance = wallet.Balance - totalAmount
+			if err := database.Db.Model(&wallet).Update("balance", balance).Error; err != nil {
+				return nil, err
+			}
+			var wallethistory models.Wallethistory
+			wallethistory.UsersID = userID
+			wallethistory.Credit = 0
+			wallethistory.Debit = totalAmount
+			if err := database.Db.Create(&wallethistory).Error; err != nil {
+				return nil, err
+			}
 		}
 
 		order := models.Orders{
@@ -175,14 +215,29 @@ func createOrder(cartID uint, userID uint, addressID uint, paymentMethod string)
 			totalAmount += product.ProductPrice
 		}
 
+		var coupon models.Coupon
+		if err := database.Db.Where("coupon_code = ?", coupen).First(&coupon).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return nil, errors.New("invalid coupon code")
+			}
+			return nil, err
+		}
+		if time.Now().After(coupon.ExpiryDate) {
+			return nil, errors.New("coupon has expired")
+		}
+
+		discount := (coupon.CouponPercentage * totalAmount) / 100
+		totalAmount -= discount
+
 		order := models.Orders{
-			UsersID:       userID,
-			AddressID:     addressID,
-			Orderid:       uuid.New().String(),
-			PaymentMethod: paymentMethod,
-			TotalAmount:   totalAmount,
-			Status:        true,
-			Paymentstatus: false,
+			UsersID:              userID,
+			AddressID:            addressID,
+			Orderid:              uuid.New().String(),
+			PaymentMethod:        paymentMethod,
+			TotalAmount:          totalAmount,
+			Status:               true,
+			Paymentstatus:        false,
+			ExpectedDeliveryDate: time.Now().AddDate(0, 0, 12),
 		}
 		if err := database.Db.Create(&order).Error; err != nil {
 			return nil, err
@@ -233,13 +288,11 @@ type OrderResponse struct {
 func ListOrders(c *gin.Context) {
 	var orders []models.Orders
 
-	// Retrieve all orders
 	if err := database.Db.Find(&orders).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Error retrieving orders"})
 		return
 	}
 
-	// Retrieve the items associated with each order
 	var orderResponses []OrderResponse
 	for _, order := range orders {
 		var orderedItems []OrderItemResponse
