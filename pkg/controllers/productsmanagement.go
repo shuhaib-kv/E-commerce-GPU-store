@@ -3,6 +3,7 @@ package controllers
 import (
 	"ga/pkg/database"
 	"ga/pkg/models"
+	"math"
 	"net/http"
 	"path/filepath"
 	"strconv"
@@ -196,17 +197,65 @@ func EditProduct(c *gin.Context) {
 	}
 
 }
+
+type ProductFilter struct {
+	Name      string `form:"name"`
+	Brand     string `form:"brand"`
+	MinPrice  uint   `form:"minPrice"`
+	MaxPrice  uint   `form:"maxPrice"`
+	Category  string `form:"category"`
+	PageSize  int    `form:"pageSize"`
+	PageIndex int    `form:"pageIndex"`
+}
+
 func ViewProducts(c *gin.Context) {
-	var products []models.Product
-	database.Db.Find(&products)
-	if len(products) == 0 {
+	// Parse the filter parameters from the request query string
+	var filter ProductFilter
+	if err := c.BindQuery(&filter); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"status":  true,
-			"message": "No products found",
-			"data":    "Please add some products",
+			"status":  false,
+			"message": "Invalid filter parameters",
+			"error":   err.Error(),
 		})
 		return
 	}
+
+	// Set default values for the filter parameters if they are not provided
+	if filter.PageSize == 0 {
+		filter.PageSize = 10
+	}
+	if filter.PageIndex == 0 {
+		filter.PageIndex = 1
+	}
+
+	// Build the query to retrieve the products based on the filter parameters
+	query := database.Db.Model(&models.Product{})
+	if filter.Name != "" {
+		query = query.Where("name iLIKE ?", "%"+filter.Name+"%")
+	}
+	if filter.Brand != "" {
+		query = query.Where("brand = ?", filter.Brand)
+	}
+	if filter.MinPrice != 0 {
+		query = query.Where("price >= ?", filter.MinPrice)
+	}
+	if filter.MaxPrice != 0 {
+		query = query.Where("price <= ?", filter.MaxPrice)
+	}
+	if filter.Category != "" {
+		query = query.Joins("JOIN categories ON categories.id = products.category_id").
+			Where("categories.name = ?", filter.Category)
+	}
+
+	// Paginate the results based on the filter parameters
+	var totalProducts int64
+	query.Count(&totalProducts)
+	totalPages := int(math.Ceil(float64(totalProducts) / float64(filter.PageSize)))
+	offset := (filter.PageIndex - 1) * filter.PageSize
+	var products []models.Product
+	query.Offset(offset).Limit(filter.PageSize).Find(&products)
+
+	// Build the response payload
 	var productJSON []gin.H
 	for _, product := range products {
 		productJSON = append(productJSON, gin.H{
@@ -219,14 +268,17 @@ func ViewProducts(c *gin.Context) {
 		})
 	}
 	c.JSON(http.StatusOK, gin.H{
-		"status":  true,
-		"message": "Products found",
-		"data":    productJSON,
+		"status":      true,
+		"message":     "Products found",
+		"data":        productJSON,
+		"currentPage": filter.PageIndex,
+		"pageSize":    filter.PageSize,
+		"totalPages":  totalPages,
+		"totalItems":  totalProducts,
 	})
 }
 
 func DeleteProduct(c *gin.Context) {
-	//done
 	id := c.Param("id")
 	var products models.Product
 	if err := database.Db.First(&products, "id=?", id); err.Error != nil {

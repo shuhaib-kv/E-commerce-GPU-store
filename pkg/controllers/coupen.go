@@ -1,9 +1,12 @@
 package controllers
 
 import (
+	"fmt"
 	"ga/pkg/database"
 	"ga/pkg/models"
+	"math"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -63,31 +66,107 @@ func AddCoupon(c *gin.Context) {
 }
 
 func DeleteCoupon(c *gin.Context) {
-	var coupon models.Coupon
-	couponName := c.Query("couponName")
-	database.Db.Where("coupon_name = ?", couponName).Delete(&coupon)
-	c.JSON(200, gin.H{
-		"status":  true,
-		"message": "Deleted succesfully",
-	})
-
-}
-
-func ListCoupons(c *gin.Context) {
-	var coupons []models.Coupon
-	result := database.Db.Find(&coupons)
-	if result.Error != nil {
-		c.JSON(http.StatusNotFound, gin.H{
-			"ststus":  false,
-			"message": "No coupon found",
-			"error":   result.Error,
+	var body struct {
+		CouponName string `json:"couponname"`
+	}
+	err := c.ShouldBindJSON(&body)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  false,
+			"message": "binding json faild",
+			"data":    "error ",
 		})
 		return
 	}
-	c.JSON(http.StatusFound, gin.H{
-		"status":  true,
-		"message": "coupen found",
-		"data":    coupons,
-	})
 
+	result := database.Db.Delete(&models.Coupon{}, "coupon_name = ?", body.CouponName)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  false,
+			"message": "Failed to delete coupon",
+			"error":   result.Error.Error(),
+		})
+		return
+	}
+
+	if result.RowsAffected == 0 {
+		c.JSON(http.StatusNotFound, gin.H{
+			"status":  false,
+			"message": "Coupon not found",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  true,
+		"message": "Coupon deleted successfully",
+	})
+}
+func ListCoupons(c *gin.Context) {
+	var coupons []models.Coupon
+
+	page, err := strconv.Atoi(c.Query("page"))
+	if err != nil {
+		page = 1
+	}
+	pageSize, err := strconv.Atoi(c.Query("pageSize"))
+	if err != nil {
+		pageSize = 10
+	}
+	offset := (page - 1) * pageSize
+
+	// Retrieve query parameters for search filter
+	couponCode := c.Query("couponCode")
+	couponName := c.Query("couponName")
+	couponPercentage, err := strconv.ParseUint(c.Query("couponPercentage"), 10, 32)
+	if err != nil {
+		couponPercentage = 0
+	}
+
+	// Build query with search filter
+	query := database.Db.Offset(offset).Limit(pageSize)
+	if couponCode != "" {
+		query = query.Where("coupon_code LIKE ?", fmt.Sprintf("%%%s%%", couponCode))
+	}
+	if couponName != "" {
+		query = query.Where("coupon_name LIKE ?", fmt.Sprintf("%%%s%%", couponName))
+	}
+	if couponPercentage > 0 {
+		query = query.Where("coupon_percentage = ?", couponPercentage)
+	}
+
+	result := query.Find(&coupons)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  false,
+			"message": "Error retrieving coupons",
+			"error":   result.Error.Error(),
+		})
+		return
+	}
+
+	var totalCoupons int64
+	database.Db.Model(&models.Coupon{}).Count(&totalCoupons)
+	totalPages := int(math.Ceil(float64(totalCoupons) / float64(pageSize)))
+
+	var couponsResponse []map[string]interface{}
+	for _, coupon := range coupons {
+		couponResponse := map[string]interface{}{
+			"CouponName":       coupon.CouponName,
+			"CouponCode":       coupon.CouponCode,
+			"CouponPercentage": coupon.CouponPercentage,
+			"ExpiryDate":       coupon.ExpiryDate,
+		}
+		couponsResponse = append(couponsResponse, couponResponse)
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":      true,
+		"message":     "Coupons retrieved successfully",
+		"data":        couponsResponse,
+		"currentPage": page,
+		"pageSize":    pageSize,
+		"totalPages":  totalPages,
+		"totalItems":  totalCoupons,
+	})
 }
