@@ -6,5 +6,4 @@ type Discount struct {
 	gorm.Model
 	DiscountName       string
 	DiscountPercentage uint
-	ProductId          uint
 }

@@ -50,35 +50,6 @@ func AddCategory(c *gin.Context) {
 	})
 }
 
-// func AddCategory(c *gin.Context) {
-// 	Name_c := c.PostForm("name")
-
-// 	catogory := models.Category{
-// 		Name: Name_c,
-// 	}
-// 	var check []models.Category
-// 	database.Db.Find(&check)
-// 	for _, i := range check {
-// 		if i.Name == catogory.Name {
-// 			c.JSON(http.StatusBadRequest, gin.H{
-// 				"status":  false,
-// 				"message": "CATEGORY Already Exist",
-// 			})
-// 			return
-// 		}
-
-//		}
-//		result := database.Db.Create(&catogory)
-//		if result.Error != nil {
-//			c.JSON(400, gin.H{
-//				"message": "Error",
-//			})
-//		}
-//		// Return it
-//		c.JSON(200, gin.H{
-//			"message": "Category added",
-//		})
-//	}
 func ViewCategory(c *gin.Context) {
 	// Get all categories from database
 	var categories []models.Category
@@ -108,21 +79,6 @@ func ViewCategory(c *gin.Context) {
 		"categories": categoriesJSON,
 	})
 }
-
-//	func ViewProductByCategory(c *gin.Context) {
-//		id := c.Param("id")
-//		var product []models.Product
-//		database.Db.Find(&product, "categoryid = ?", id)
-//		for _, i := range product {
-//			c.JSON(200, gin.H{
-//				"id":    i.ID,
-//				"Name":  i.Name,
-//				"price": i.Price,
-//				"image": i.Image1 + i.Image2 + i.Image3,
-//				"brand": i.Brand,
-//			})
-//		}
-//	}
 func ViewProductByCategory(c *gin.Context) {
 	var reqBody struct {
 		Id int `json:"id" binding:"required"`

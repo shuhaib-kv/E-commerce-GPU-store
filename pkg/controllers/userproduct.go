@@ -13,14 +13,13 @@ func ViewProductsUser(c *gin.Context) {
 
 	for _, i := range products {
 		c.JSON(200, gin.H{
-			"id":             i.ID,
-			"Name":           i.Name,
-			"Actual price":   i.Price,
-			"Discount_price": i.Discount_Price,
-			"image":          i.Image1 + i.Image2 + i.Image3,
-			"brand":          i.Brand,
-			"chipset brand":  i.Chipset_brand,
-			"modelgpu":       i.Model_gpu,
+			"id":            i.ID,
+			"Name":          i.Name,
+			"Actual price":  i.Price,
+			"image":         i.Image1 + i.Image2 + i.Image3,
+			"brand":         i.Brand,
+			"chipset brand": i.Chipset_brand,
+			"modelgpu":      i.Model_gpu,
 		})
 	}
 
@@ -36,7 +35,6 @@ func ViewProductsUserbyid(c *gin.Context) {
 			"id":                    i.ID,
 			"Name":                  i.Name,
 			"Actual price":          i.Price,
-			"Discount_price":        i.Discount_Price,
 			"image":                 i.Image1 + i.Image2 + i.Image3,
 			"brand":                 i.Brand,
 			"Description":           i.Description,

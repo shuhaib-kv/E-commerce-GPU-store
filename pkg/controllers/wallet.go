@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"errors"
-	"fmt"
 	"ga/pkg/database"
 	"ga/pkg/models"
 	"net/http"
@@ -12,40 +11,50 @@ import (
 	"gorm.io/gorm"
 )
 
-func WalletBalance(c *gin.Context) {
-	UsersID, _ := strconv.ParseUint(c.GetString("id"), 10, 32)
-
-	var balance int
-	database.Db.Raw("SELECT balance FROM wallets WHERE users_id = ?", UsersID).Scan(&balance)
-	c.JSON(200, gin.H{
-		"status":  true,
-		"Balance": balance,
-		"UserID":  UsersID,
-	})
-}
-
 func WalletInfo(c *gin.Context) {
-	useremail := c.GetString("user")
-	fmt.Println(useremail)
-	var UsersID int
-	err := database.Db.Raw("select id from users where email=?", useremail).Scan(&UsersID)
-	if errors.Is(err.Error, gorm.ErrRecordNotFound) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "user coudnt find",
-		})
-
+	userID, _ := strconv.ParseUint(c.GetString("id"), 10, 32)
+	var balance uint
+	result := database.Db.Model(&models.Wallet{}).Where("users_id = ?", userID).Select("balance").Scan(&balance)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{
+				"status":  false,
+				"message": "User not found",
+			})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"status":  false,
+				"message": "Failed to query wallet balance",
+			})
+		}
+		return
 	}
+
 	var history []models.Wallethistory
-	database.Db.Where("wallethistories.users_id = ?", UsersID).Find(&history)
-
-	for _, i := range history {
-		c.JSON(200, gin.H{
-			"status": true,
-			"Date":   i.CreatedAt,
-			"Debit":  i.Debit,
-			"Credit": i.Credit,
-			"UserID": i.UsersID,
+	result = database.Db.Model(&models.Wallethistory{}).Where("users_id = ?", userID).Find(&history)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  false,
+			"message": "Failed to query wallet history",
 		})
+		return
 	}
-
+	historyResponse := make([]gin.H, len(history))
+	for i, item := range history {
+		historyResponse[i] = gin.H{
+			"date":   item.CreatedAt,
+			"debit":  item.Debit,
+			"credit": item.Credit,
+			"userID": item.UsersID,
+		}
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"status": true,
+		"data": gin.H{
+			"balance": balance,
+			"userID":  userID,
+			"history": historyResponse,
+		},
+		"message": "Your Wallet History",
+	})
 }

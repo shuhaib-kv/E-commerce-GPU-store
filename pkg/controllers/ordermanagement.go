@@ -10,19 +10,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-//		func ViewOrders(c *gin.Context) {
-//			var order []models.Orders
-//			database.Db.Find(&order)
-//			for _, i := range order {
-//				c.JSON(200, gin.H{
-//					"id":             i.OrderID,
-//					"user id":        i.UsersID,
-//					"price":          i.Total_Amount,
-//					"Adressid":       i.AddressID,
-//					"order status":   i.OrderStatus,
-//					"payment status": i.PaymentStatus,
-//				})
-//	}
 func ViewOrders(c *gin.Context) {
 	// Get the page number and page size from the query parameters
 	pageNum, err := strconv.Atoi(c.Query("pageNum"))

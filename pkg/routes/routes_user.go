@@ -30,6 +30,7 @@ func UserRoutes(User *gin.Engine) {
 	User.GET("/payment-success", middleware.UserAuth(), controllers.RazorpaySuccess)
 	User.GET("/success", middleware.UserAuth(), controllers.Success)
 	User.GET("/user/address", middleware.UserAuth(), controllers.ShowAddress)
+	// User.GET("/user/wallet", middleware.UserAuth(), controllers.WalletInfo)
 
 	//ordernow
 
@@ -41,7 +42,7 @@ func UserRoutes(User *gin.Engine) {
 	User.GET("/razorpay", middleware.UserAuth(), controllers.RazorPay)
 	User.GET("/user/cart/view", middleware.UserAuth(), controllers.ViewCart) //DOne
 	User.GET("/user/wallet/history", middleware.UserAuth(), controllers.WalletInfo)
-	User.GET("/user/wallet/balance", middleware.UserAuth(), controllers.WalletBalance)
+	// User.GET("/user/wallet/balance", middleware.UserAuth(), controllers.WalletBalance)
 
 	///adress
 

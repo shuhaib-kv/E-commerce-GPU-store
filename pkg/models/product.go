@@ -34,5 +34,4 @@ type Product struct {
 	Rops                  string `json:"rops"`
 	Power_Connecters      string `json:"powerconnecters"`
 	Discount              uint   `json:"discount"`
-	Discount_Price        uint   `json:"discountprice"`
 }

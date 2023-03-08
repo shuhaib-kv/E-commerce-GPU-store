@@ -39,9 +39,9 @@ func AdminRoutes(Admin *gin.Engine) {
 
 	Admin.GET("/admin/list/coupons", middleware.AdminAuth(), controllers.ListCoupons)
 	Admin.GET("/admin/order/view", middleware.AdminAuth(), controllers.ViewOrders)
-
+	Admin.GET("/admin/discount", middleware.AdminAuth(), controllers.GetDiscountsWithFilters)
 	// Admin.PATCH("/admin/order/update/:id", middleware.AdminAuth(), controllers.EditOrder)
-	// Admin.GET("/admin/list/discounts", middleware.AdminAuth(), controllers.ListDiscount)
+	Admin.POST("/admin/add/discount", middleware.AdminAuth(), controllers.AddDiscount)
 	Admin.POST("/admin/add/coupon", middleware.AdminAuth(), controllers.AddCoupon)
 	// Admin.POST("/admin/add/discount", middleware.AdminAuth(), controllers.D)
 

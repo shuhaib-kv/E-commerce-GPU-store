@@ -59,8 +59,7 @@ func AdminAddProduct(c *gin.Context) {
 	P_Power_Connecters := c.PostForm("powerconnecters")
 	p_Discount := c.PostForm("discount")
 	discount, _ := strconv.Atoi(p_Discount)
-	p_Discount_price := c.PostForm("discountprice")
-	discountprice, _ := strconv.Atoi(p_Discount_price)
+
 	product := models.Product{
 		Name:                  P_Name,
 		Price:                 uint(P_Price),
@@ -90,7 +89,6 @@ func AdminAddProduct(c *gin.Context) {
 		Rops:                  P_Rops,
 		Power_Connecters:      P_Power_Connecters,
 		Discount:              uint(discount),
-		Discount_Price:        uint(discountprice),
 	}
 	var check []models.Product
 	database.Db.Find(&check)
@@ -189,7 +187,6 @@ func EditProduct(c *gin.Context) {
 			Rops:                  body.Rops,
 			Power_Connecters:      body.Power_Connecters,
 			Discount:              body.Discount,
-			Discount_Price:        body.Discount_Price,
 		})
 		c.JSON(200, gin.H{
 			"status":  true,

@@ -116,7 +116,20 @@ func createOrder(cartID uint, userID uint, addressID uint, paymentMethod string,
 
 		var totalAmount uint
 		for _, cp := range cartProducts {
-			totalAmount += cp.ProductPrice
+			product := models.Product{}
+			if err := database.Db.First(&product, cp.Productid).Error; err != nil {
+				return nil, err
+			}
+			if product.Discount != 0 {
+				discount := models.Discount{}
+				if err := database.Db.First(&discount, product.Discount).Error; err != nil {
+					return nil, err
+				}
+				productPriceWithDiscount := (product.Price * (100 - discount.DiscountPercentage)) / 100
+				totalAmount += (productPriceWithDiscount * cp.Quantity)
+			} else {
+				totalAmount += (product.Price * cp.Quantity)
+			}
 		}
 
 		var coupon models.Coupon
@@ -179,7 +192,6 @@ func createOrder(cartID uint, userID uint, addressID uint, paymentMethod string,
 				ProductID:   cp.Productid,
 				ProductName: cp.ProductName,
 				Quantity:    cp.Quantity,
-				Price:       cp.ProductPrice,
 			}
 			if err := database.Db.Create(&orderedItem).Error; err != nil {
 				return nil, err
