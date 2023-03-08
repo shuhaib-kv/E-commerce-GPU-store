@@ -22,38 +22,51 @@ func AddDiscount(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, discount)
+	c.JSON(http.StatusOK, gin.H{
+		"status":  true,
+		"message": "discount added successfully",
+		"data":    discount,
+	})
 }
-
 func DeleteDiscount(c *gin.Context) {
-	discountID := c.Param("id")
-	var discount models.Discount
-	if err := database.Db.First(&discount, discountID).Error; err != nil {
-		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "Discount not found"})
-		return
+	var request struct {
+		Id uint `json:"id"`
 	}
-	if err := database.Db.Delete(&discount).Error; err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"message": "Discount deleted"})
-}
-func ListDiscount(c *gin.Context) {
-	var discount []models.Discount
-	result := database.Db.Find(&discount)
-	if result.Error != nil {
-		c.JSON(400, gin.H{
+	if err := c.Bind(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
 			"status":  false,
-			"message": "No discount found",
+			"error":   err,
+			"message": "Invalid request body",
 		})
 		return
 	}
-	c.JSON(200, gin.H{
-		"status": true,
-		"data":   discount,
-	})
 
+	var discount models.Discount
+	if err := database.Db.First(&discount, request.Id).Error; err != nil {
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
+			"status":  false,
+			"message": "Discount not found",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	if err := database.Db.Delete(&discount).Error; err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"status":  false,
+			"error":   err.Error(),
+			"message": "Failed to delete discount",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  true,
+		"message": "Discount deleted successfully",
+		"data":    discount,
+	})
 }
+
 func GetDiscountsWithFilters(c *gin.Context) {
 
 	nameFilter := c.Query("name")
