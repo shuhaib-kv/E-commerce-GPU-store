@@ -6,6 +6,7 @@ import (
 	"ga/pkg/database"
 	"ga/pkg/models"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -164,7 +165,11 @@ func UserLogin(c *gin.Context) {
 }
 
 func UserHome(c *gin.Context) {
-	c.JSON(200, gin.H{"msg": "welcome User Home"})
+	useremail := c.GetString("user")
+	id := c.GetString("id")
+
+	c.JSON(200, gin.H{"msg": "welcome User Home",
+		useremail: id})
 
 }
 
@@ -222,15 +227,9 @@ func AddAddress(c *gin.Context) {
 }
 
 func ShowAddress(c *gin.Context) {
-	useremail := c.GetString("user")
-	var UsersID uint
-	err := database.Db.Raw("select id from users where email=?", useremail).Scan(&UsersID)
-	if errors.Is(err.Error, gorm.ErrRecordNotFound) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "user coudnt find",
-		})
+	id := c.GetString("id")
+	UsersID, _ := strconv.Atoi(id)
 
-	}
 	var Adress []struct {
 		Address_id   uint
 		Name         string
@@ -241,7 +240,7 @@ func ShowAddress(c *gin.Context) {
 		Landmark     string
 		City         string
 	}
-	record := database.Db.Select("address_id", "user_id", "name", "phone_number", "pincode", "house", "area", "landmark", "city").Table("addresses").Where("user_id=?", UsersID).Find(&Adress)
+	record := database.Db.Select("address_id", "user_id", "name", "phone_number", "pincode", "house", "area", "landmark", "city").Table("addresses").Where("user_id=?", uint(UsersID)).Find(&Adress)
 	if record.Error != nil {
 		c.JSON(http.StatusNotAcceptable, gin.H{
 			"status":  false,

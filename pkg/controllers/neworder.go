@@ -6,6 +6,7 @@ import (
 	"ga/pkg/database"
 	"ga/pkg/models"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -36,16 +37,7 @@ func OrderCart(c *gin.Context) {
 		})
 		return
 	}
-	useremail := c.GetString("user")
-	var userID uint
-	err := database.Db.Raw("select id from users where email=?", useremail).Scan(&userID)
-	if errors.Is(err.Error, gorm.ErrRecordNotFound) {
-		c.JSON(http.StatusNotFound, gin.H{
-			"status":  false,
-			"message": "User not found",
-		})
-		return
-	}
+	userID, _ := strconv.ParseUint(c.GetString("id"), 10, 32)
 
 	var cart models.Cart
 	if err := database.Db.Where("user_id = ?", userID).First(&cart).Error; err != nil {
@@ -74,7 +66,7 @@ func OrderCart(c *gin.Context) {
 	}
 
 	if body.Paymentmethod == PaymentMethodCOD {
-		if _, err := createOrder(cart.ID, userID, body.Address, string(body.Paymentmethod), body.Coupen, body.Applaywallet); err != nil {
+		if _, err := createOrder(cart.ID, uint(userID), body.Address, string(body.Paymentmethod), body.Coupen, body.Applaywallet); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"status":  false,
 				"message": "Failed to create order",
@@ -91,7 +83,7 @@ func OrderCart(c *gin.Context) {
 		return
 	}
 	if body.Paymentmethod == PaymentMethodRazorpay {
-		if _, err := createOrder(cart.ID, userID, body.Address, string(body.Paymentmethod), body.Coupen, body.Applaywallet); err != nil {
+		if _, err := createOrder(cart.ID, uint(userID), body.Address, string(body.Paymentmethod), body.Coupen, body.Applaywallet); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"status":  false,
 				"message": "Failed to create order",

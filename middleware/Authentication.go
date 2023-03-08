@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"errors"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -9,57 +10,66 @@ import (
 	"github.com/golang-jwt/jwt"
 )
 
-var P string
-var S string
+// Define global variables for email and ID
+var email string
+var id string
 
+// AdminAuth middleware function for handling admin authentication
 func AdminAuth() gin.HandlerFunc {
-	return func(context *gin.Context) {
-		// tokenString := context.GetHeader("Authorization")
-		tokenString, err := context.Cookie("Adminjwt")
+	return func(c *gin.Context) {
+		// Retrieve JWT from cookie
+		tokenString, err := c.Cookie("Adminjwt")
 		if tokenString == "" {
-			context.JSON(401, gin.H{"error": "request does not contain an access token"})
-			context.Abort()
+			c.JSON(401, gin.H{"error": "request does not contain an access token"})
+			c.Abort()
 			return
 		}
+		// Validate JWT
 		err = ValidateToken(tokenString)
 		if err != nil {
-			context.JSON(401, gin.H{"error": err.Error()})
-			context.Abort()
+			c.JSON(401, gin.H{"error": err.Error()})
+			c.Abort()
 			return
 		}
-		context.Next()
+		c.Next()
 	}
 }
 
+// UserAuth middleware function for handling user authentication
 func UserAuth() gin.HandlerFunc {
-	return func(context *gin.Context) {
-		tokenString, err := context.Cookie("UserAuth")
+	return func(c *gin.Context) {
+		// Retrieve JWT from cookie
+		tokenString, err := c.Cookie("UserAuth")
 		if tokenString == "" {
-			context.JSON(401, gin.H{"error": "request does not contain an access token"})
-			context.Abort()
+			c.JSON(401, gin.H{"error": "request does not contain an access token"})
+			c.Abort()
 			return
 		}
+		// Validate JWT
 		err = ValidateToken(tokenString)
-		context.Set("user", P)
-		context.Set("id", S)
+		// Set email and ID values from JWT claims
+		c.Set("user", email)
+		c.Set("id", id)
 		if err != nil {
-			context.JSON(401, gin.H{"error": err.Error()})
-			context.Abort()
+			c.JSON(401, gin.H{"error": err.Error()})
+			c.Abort()
 			return
 		}
-
-		context.Next()
+		c.Next()
 	}
 }
 
+// Define JWT key
 var JwtKey = []byte("supersecretkey")
 
+// Define JWTClaim struct for storing JWT claims
 type JWTClaim struct {
 	Email string `json:"email"`
 	Uid   uint   `json:"uid"`
 	jwt.StandardClaims
 }
 
+// GenerateJWT function for generating a new JWT
 func GenerateJWT(email string, uid uint) (tokenString string, err error) {
 	expirationTime := time.Now().Add(1 * time.Hour)
 	claims := &JWTClaim{
@@ -74,7 +84,9 @@ func GenerateJWT(email string, uid uint) (tokenString string, err error) {
 	return
 }
 
+// ValidateToken function for validating a JWT
 func ValidateToken(signedToken string) (err error) {
+	// Parse JWT with claims
 	token, err := jwt.ParseWithClaims(
 		signedToken,
 		&JWTClaim{},
@@ -85,9 +97,10 @@ func ValidateToken(signedToken string) (err error) {
 	if err != nil {
 		return
 	}
+	// Set email and ID values from JWT claims
 	claims, ok := token.Claims.(*JWTClaim)
-	S = claims.Id
-	P = claims.Email
+	id = strconv.Itoa(int(claims.Uid))
+	email = claims.Email
 	if !ok {
 		err = errors.New("couldn't parse claims")
 		return

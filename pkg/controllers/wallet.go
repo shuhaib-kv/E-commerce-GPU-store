@@ -6,22 +6,15 @@ import (
 	"ga/pkg/database"
 	"ga/pkg/models"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
 func WalletBalance(c *gin.Context) {
-	useremail := c.GetString("user")
-	fmt.Println(useremail)
-	var UsersID int
-	err := database.Db.Raw("select id from users where email=?", useremail).Scan(&UsersID)
-	if errors.Is(err.Error, gorm.ErrRecordNotFound) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "user coudnt find",
-		})
+	UsersID, _ := strconv.ParseUint(c.GetString("id"), 10, 32)
 
-	}
 	var balance int
 	database.Db.Raw("SELECT balance FROM wallets WHERE users_id = ?", UsersID).Scan(&balance)
 	c.JSON(200, gin.H{

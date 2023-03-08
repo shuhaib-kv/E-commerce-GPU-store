@@ -1,25 +1,18 @@
 package controllers
 
 import (
-	"errors"
 	"ga/pkg/database"
 	"ga/pkg/models"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
 func AddToCart(c *gin.Context) {
-	useremail := c.GetString("user")
-	var UsersID uint
-	err := database.Db.Raw("select id from users where email=?", useremail).Scan(&UsersID)
-	if errors.Is(err.Error, gorm.ErrRecordNotFound) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "user coudnt find",
-		})
 
-	}
+	UsersID, _ := strconv.ParseUint(c.GetString("id"), 10, 32)
+
 	var body struct {
 		Productid uint
 		Quantity  uint
@@ -137,16 +130,8 @@ func AddToCart(c *gin.Context) {
 }
 
 func ViewCart(c *gin.Context) {
-	useremail := c.GetString("user")
-	var userID uint
-	err := database.Db.Raw("select id from users where email=?", useremail).Scan(&userID)
-	if errors.Is(err.Error, gorm.ErrRecordNotFound) {
-		c.JSON(http.StatusNotFound, gin.H{
-			"status":  false,
-			"message": "User not found",
-		})
-		return
-	}
+
+	userID, _ := strconv.ParseUint(c.GetString("id"), 10, 32)
 
 	var cart models.Cart
 	if err := database.Db.Where("user_id = ?", userID).First(&cart).Error; err != nil {

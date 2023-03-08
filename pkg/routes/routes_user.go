@@ -14,6 +14,8 @@ func UserRoutes(User *gin.Engine) {
 	User.POST("/user/login/otp/validate", controllers.CheckOtp)
 	User.POST("/user/login", controllers.UserLogin)
 	//userhome
+	User.GET("/user/home", middleware.UserAuth(), controllers.UserHome)
+
 	//products
 	User.GET("/user/viewproducts", middleware.UserAuth(), controllers.ViewProductsUser)
 	User.GET("/user/viewproducts/:id", middleware.UserAuth(), controllers.ViewProductsUserbyid)
