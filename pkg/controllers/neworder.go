@@ -159,17 +159,25 @@ func createOrder(cartID uint, userID uint, addressID uint, paymentMethod string,
 			if wallet.Balance < totalAmount {
 				return nil, errors.New("insufficient wallet balance")
 			}
-			balance = wallet.Balance - totalAmount
+			balance = totalAmount
+			totalAmount -= balance
 			if err := database.Db.Model(&wallet).Update("balance", balance).Error; err != nil {
 				return nil, err
 			}
 			var wallethistory models.Wallethistory
 			wallethistory.UsersID = userID
 			wallethistory.Credit = 0
-			wallethistory.Debit = totalAmount
+			wallethistory.Debit = balance
 			if err := database.Db.Create(&wallethistory).Error; err != nil {
 				return nil, err
 			}
+		}
+		var payment bool
+		if totalAmount == 0 {
+			payment = true
+		} else {
+			payment = false
+
 		}
 
 		order := models.Orders{
@@ -179,7 +187,7 @@ func createOrder(cartID uint, userID uint, addressID uint, paymentMethod string,
 			PaymentMethod:        paymentMethod,
 			TotalAmount:          totalAmount,
 			Status:               true,
-			Paymentstatus:        false,
+			Paymentstatus:        payment,
 			ExpectedDeliveryDate: time.Now().AddDate(0, 0, 12),
 		}
 		if err := database.Db.Create(&order).Error; err != nil {
@@ -215,23 +223,70 @@ func createOrder(cartID uint, userID uint, addressID uint, paymentMethod string,
 		}
 
 		var totalAmount uint
-		for _, product := range cartProducts {
-			totalAmount += product.ProductPrice
+		for _, cp := range cartProducts {
+			product := models.Product{}
+			if err := database.Db.First(&product, cp.Productid).Error; err != nil {
+				return nil, err
+			}
+			if product.Discount != 0 {
+				discount := models.Discount{}
+				if err := database.Db.First(&discount, product.Discount).Error; err != nil {
+					return nil, err
+				}
+				productPriceWithDiscount := (product.Price * (100 - discount.DiscountPercentage)) / 100
+				totalAmount += (productPriceWithDiscount * cp.Quantity)
+			} else {
+				totalAmount += (product.Price * cp.Quantity)
+			}
 		}
 
 		var coupon models.Coupon
-		if err := database.Db.Where("coupon_code = ?", coupen).First(&coupon).Error; err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return nil, errors.New("invalid coupon code")
+		if coupen != "" {
+			if err := database.Db.Where("coupon_code = ?", coupen).First(&coupon).Error; err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					return nil, errors.New("invalid coupon code")
+				}
+				return nil, err
 			}
-			return nil, err
-		}
-		if time.Now().After(coupon.ExpiryDate) {
-			return nil, errors.New("coupon has expired")
+			if time.Now().After(coupon.ExpiryDate) {
+				return nil, errors.New("coupon has expired")
+			}
+			discount := (coupon.CouponPercentage * totalAmount) / 100
+			totalAmount -= discount
 		}
 
-		discount := (coupon.CouponPercentage * totalAmount) / 100
-		totalAmount -= discount
+		var balance uint
+		if applaywallet {
+			var wallet models.Wallet
+			if err := database.Db.Where("users_id = ?", userID).First(&wallet).Error; err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					return nil, errors.New("user wallet not found")
+				}
+				return nil, err
+			}
+			if wallet.Balance < totalAmount {
+				return nil, errors.New("insufficient wallet balance")
+			}
+			balance = totalAmount
+			totalAmount -= balance
+			if err := database.Db.Model(&wallet).Update("balance", balance).Error; err != nil {
+				return nil, err
+			}
+			var wallethistory models.Wallethistory
+			wallethistory.UsersID = userID
+			wallethistory.Credit = 0
+			wallethistory.Debit = balance
+			if err := database.Db.Create(&wallethistory).Error; err != nil {
+				return nil, err
+			}
+		}
+		var payment bool
+		if totalAmount == 0 {
+			payment = true
+		} else {
+			payment = false
+
+		}
 
 		order := models.Orders{
 			UsersID:              userID,
@@ -240,7 +295,7 @@ func createOrder(cartID uint, userID uint, addressID uint, paymentMethod string,
 			PaymentMethod:        paymentMethod,
 			TotalAmount:          totalAmount,
 			Status:               true,
-			Paymentstatus:        false,
+			Paymentstatus:        payment,
 			ExpectedDeliveryDate: time.Now().AddDate(0, 0, 12),
 		}
 		if err := database.Db.Create(&order).Error; err != nil {
@@ -326,5 +381,79 @@ func ListOrders(c *gin.Context) {
 		"orders":  orderResponses,
 		"status":  true,
 		"message": "your orders",
+	})
+}
+func CancelOrder(c *gin.Context) {
+	var body struct {
+		Orderid string `json:"order_id"`
+	}
+
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  false,
+			"message": "Invalid request body",
+			"error":   err.Error(),
+		})
+		return
+	}
+	userID, _ := strconv.ParseUint(c.GetString("id"), 10, 32)
+
+	var order models.Orders
+	if err := database.Db.Where("orderid = ? and users_id=?", body.Orderid, userID).First(&order).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  false,
+			"message": "Check the orderid",
+			"error":   "Invalid orderid",
+		})
+		return
+	}
+
+	if order.Paymentstatus {
+		var wallet models.Wallet
+		if err := database.Db.Where("users_id = ?", order.UsersID).First(&wallet).Error; err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"status":  false,
+				"message": "Database ",
+				"error":   "Database error",
+			})
+			return
+		}
+		wallet.Balance += order.TotalAmount
+		if err := database.Db.Save(&wallet).Error; err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"status":  false,
+				"message": "Database ",
+				"error":   "Database error",
+			})
+			return
+		}
+
+		history := models.Wallethistory{
+			UsersID: order.UsersID,
+			Credit:  order.TotalAmount,
+		}
+		if err := database.Db.Create(&history).Error; err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"status":  false,
+				"message": "Database ",
+				"error":   "Database error",
+			})
+			return
+		}
+	}
+
+	order.Status = false
+	if err := database.Db.Save(&order).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  false,
+			"message": "Database ",
+			"error":   "Database error",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  true,
+		"message": "Order has been cancelled successfully",
 	})
 }

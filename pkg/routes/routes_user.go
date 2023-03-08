@@ -34,8 +34,9 @@ func UserRoutes(User *gin.Engine) {
 
 	//ordernow
 
-	User.POST("/cart/order", middleware.UserAuth(), controllers.OrderCart)     //Done
-	User.GET("/user/orderview", middleware.UserAuth(), controllers.ListOrders) //Done
+	User.POST("/cart/order", middleware.UserAuth(), controllers.OrderCart)          //Done
+	User.GET("/user/orderview", middleware.UserAuth(), controllers.ListOrders)      //Done
+	User.POST("/user/cancel/order", middleware.UserAuth(), controllers.CancelOrder) //Done
 
 	// // User.POST("/user/cart/order", middleware.UserAuth(), controllers.BuyFromCart)
 	User.POST("/cart/add", middleware.UserAuth(), controllers.AddToCart) //Done
