@@ -3,59 +3,79 @@ package controllers
 import (
 	"ga/pkg/database"
 	"ga/pkg/models"
+	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
 
 func ViewProductsUser(c *gin.Context) {
-	var products []models.Product
-	database.Db.Find(&products)
+	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
+	if err != nil || page < 1 {
+		page = 1
+	}
+	pageSize, err := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
+	if err != nil || pageSize < 1 {
+		pageSize = 10
+	}
 
-	for _, i := range products {
-		c.JSON(200, gin.H{
-			"id":            i.ID,
-			"Name":          i.Name,
-			"Actual price":  i.Price,
-			"image":         i.Image1 + i.Image2 + i.Image3,
-			"brand":         i.Brand,
-			"chipset brand": i.Chipset_brand,
-			"modelgpu":      i.Model_gpu,
+	var products []models.Product
+	query := database.Db.Model(&models.Product{})
+	if name := c.Query("name"); name != "" {
+		query = query.Where("name iLIKE ?", "%"+name+"%")
+	}
+	if brand := c.Query("brand"); brand != "" {
+		query = query.Where("brand iLIKE ?", "%"+brand+"%")
+	}
+	if minPrice, err := strconv.Atoi(c.Query("minPrice")); err == nil {
+		query = query.Where("price >= ?", minPrice)
+	}
+	if maxPrice, err := strconv.Atoi(c.Query("maxPrice")); err == nil {
+		query = query.Where("price <= ?", maxPrice)
+	}
+	if id, err := strconv.Atoi(c.Query("id")); err == nil {
+		query = query.Where("id = ?", id)
+	}
+
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	if err := query.Offset((page - 1) * pageSize).Limit(pageSize).Find(&products).Error; err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	response := make([]gin.H, 0, len(products))
+	for _, product := range products {
+		price := product.Price
+		discountAmount := uint(0) // initialize the discount amount to zero
+		if product.Discount > 0 {
+			var discount models.Discount
+			if err := database.Db.First(&discount, product.Discount).Error; err == nil {
+				discountAmount = uint(float64(price) * float64(discount.DiscountPercentage) / 100.0)
+				price = price - discountAmount
+			}
+		}
+		response = append(response, gin.H{
+			"id":              product.ID,
+			"name":            product.Name,
+			"price":           price,
+			"image":           product.Image1 + product.Image2 + product.Image3,
+			"brand":           product.Brand,
+			"chipset_brand":   product.Chipset_brand,
+			"model_gpu":       product.Model_gpu,
+			"discount_amount": discountAmount,
 		})
 	}
 
-}
-
-func ViewProductsUserbyid(c *gin.Context) {
-	id := c.Param("id")
-	var products []models.Product
-	database.Db.Find(&products).Where("products.id=?", id).Scan(&products)
-
-	for _, i := range products {
-		c.JSON(200, gin.H{
-			"id":                    i.ID,
-			"Name":                  i.Name,
-			"Actual price":          i.Price,
-			"image":                 i.Image1 + i.Image2 + i.Image3,
-			"brand":                 i.Brand,
-			"Description":           i.Description,
-			"Chipset_brand":         i.Chipset_brand,
-			"Model_gpu":             i.Model_gpu,
-			"Series":                i.Series,
-			"Generation":            i.Generation,
-			"Memmory_type":          i.Memmory_type,
-			"Thermal_design_power":  i.Thermal_design_power,
-			"Released":              i.Released,
-			"Architecture":          i.Architecture,
-			"Memmory_size":          i.Memmory_size,
-			"Recomented_resolution": i.Recomented_resolution,
-			"DirectX":               i.DirectX,
-			"Memmory_bus_width":     i.Memmory_bus_width,
-			"Production_status":     i.Production_status,
-			"Text_mapping_unit":     i.Text_mapping_unit,
-			"Slots":                 i.Slots,
-			"Rops":                  i.Rops,
-			"Power_Connecters":      i.Power_Connecters,
-		})
-	}
-
+	c.JSON(http.StatusOK, gin.H{
+		"status":   true,
+		"page":     page,
+		"pageSize": pageSize,
+		"total":    total,
+		"data":     response,
+	})
 }

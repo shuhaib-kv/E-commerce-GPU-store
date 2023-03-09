@@ -230,43 +230,40 @@ func ShowAddress(c *gin.Context) {
 	id := c.GetString("id")
 	UsersID, _ := strconv.Atoi(id)
 
-	var Adress []struct {
-		Address_id   uint
-		Name         string
-		Phone_number uint
-		Pincode      uint
-		House        string
-		Area         string
-		Landmark     string
-		City         string
-	}
-	record := database.Db.Select("address_id", "user_id", "name", "phone_number", "pincode", "house", "area", "landmark", "city").Table("addresses").Where("user_id=?", uint(UsersID)).Find(&Adress)
-	if record.Error != nil {
-		c.JSON(http.StatusNotAcceptable, gin.H{
-			"status":  false,
-			"message": "change fields",
-			"error":   record.Error.Error(),
-		})
+	var address models.Address
+	if err := database.Db.First(&address, UsersID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Address not found"})
+		return
 	}
 
 	c.JSON(http.StatusAccepted, gin.H{
 		"status":  true,
 		"message": "added address",
-		"data":    Adress,
+		"data":    address,
 	})
 }
 
 func EditAddress(c *gin.Context) {
 	var address models.Address
 	if err := c.ShouldBindJSON(&address); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "Invalid request payload",
+			"error":   err.Error()})
 		return
 	}
+
 	if err := database.Db.Model(&models.Address{}).Where("id = ?", address.ID).Updates(&address).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"message": "Failed to update address",
+			"error":   err.Error(),
+		})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Address updated successfully"})
-
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Address updated successfully",
+	})
 }

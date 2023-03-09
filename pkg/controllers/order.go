@@ -335,19 +335,32 @@ type OrderItemResponse struct {
 	Quantity    uint   `json:"quantity"`
 	Price       uint   `json:"price"`
 }
+
+type Orders struct {
+	gorm.Model
+	UsersID              uint
+	AddressID            uint
+	Orderid              string
+	PaymentMethod        string
+	TotalAmount          uint
+	Status               bool
+	Paymentstatus        bool
+	ExpectedDeliveryDate time.Time
+}
+
 type OrderResponse struct {
-	OrderID       string `json:"order_id"`
-	PaymentMethod string `json:"payment_method"`
-	PaymentStatus bool   `json:"payment_status"`
-	TotalAmount   uint   `json:"total_amount"`
-	Date          time.Time
-	Deliverydate  time.Time           `json:"delivery_date"`
-	OrderedItems  []OrderItemResponse `json:"ordered_items"`
+	OrderID         string                 `json:"order_id"`
+	PaymentMethod   string                 `json:"payment_method"`
+	PaymentStatus   bool                   `json:"payment_status"`
+	TotalAmount     uint                   `json:"total_amount"`
+	Date            time.Time              `json:"date"`
+	DeliveryDate    time.Time              `json:"delivery_date"`
+	OrderedItems    []OrderItemResponse    `json:"ordered_items"`
+	RazorPayDetails map[string]interface{} `json:"razorpay_details,omitempty"`
 }
 
 func ListOrders(c *gin.Context) {
 	var orders []models.Orders
-
 	if err := database.Db.Find(&orders).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Error retrieving orders"})
 		return
@@ -365,7 +378,29 @@ func ListOrders(c *gin.Context) {
 		paymentMethod := order.PaymentMethod
 		paymentStatus := order.Paymentstatus
 		totalAmount := order.TotalAmount
-		deliverydate := order.ExpectedDeliveryDate
+		deliveryDate := order.ExpectedDeliveryDate
+
+		var razorpay models.RazorPay
+		if paymentStatus && order.Status {
+			if err := database.Db.Where("razor_pay_order_id = ?", orderID).First(&razorpay).Error; err == nil {
+				razorpayDetails := map[string]interface{}{
+					"paymentId":  razorpay.RazorPaymentId,
+					"orderId":    razorpay.RazorPayOrderID,
+					"amountPaid": razorpay.AmountPaid,
+				}
+				orderResponses = append(orderResponses, OrderResponse{
+					OrderID:         orderID,
+					PaymentMethod:   paymentMethod,
+					PaymentStatus:   paymentStatus,
+					TotalAmount:     totalAmount,
+					Date:            order.CreatedAt,
+					OrderedItems:    orderedItems,
+					DeliveryDate:    deliveryDate,
+					RazorPayDetails: razorpayDetails,
+				})
+				continue
+			}
+		}
 
 		orderResponse := OrderResponse{
 			OrderID:       orderID,
@@ -374,15 +409,16 @@ func ListOrders(c *gin.Context) {
 			TotalAmount:   totalAmount,
 			Date:          order.CreatedAt,
 			OrderedItems:  orderedItems,
-			Deliverydate:  deliverydate,
+			DeliveryDate:  deliveryDate,
 		}
 		orderResponses = append(orderResponses, orderResponse)
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"orders":  orderResponses,
 		"status":  true,
-		"message": "your orders",
+		"message": "Your orders",
 	})
+
 }
 func CancelOrder(c *gin.Context) {
 	var body struct {

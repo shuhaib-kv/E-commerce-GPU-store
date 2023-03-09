@@ -10,12 +10,12 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 func AddCoupon(c *gin.Context) {
 	var body struct {
 		CouponName       string `json:"couponname"`
-		CouponCode       string `json:"couponcode"`
 		CouponPercentage uint   `json:"couponpercentage"`
 		Expiresat        uint   `json:"expiresat"`
 	}
@@ -28,8 +28,9 @@ func AddCoupon(c *gin.Context) {
 		})
 		return
 	}
+
 	coupon := models.Coupon{CouponName: body.CouponName,
-		CouponCode:       body.CouponCode,
+		CouponCode:       "GPU-ECOM-" + uuid.New().String(),
 		CouponPercentage: body.CouponPercentage,
 		ExpiryDate:       time.Now().AddDate(0, 0, int(body.Expiresat)),
 	}

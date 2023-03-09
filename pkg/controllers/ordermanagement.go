@@ -11,7 +11,6 @@ import (
 )
 
 func ViewOrders(c *gin.Context) {
-	// Get the page number and page size from the query parameters
 	pageNum, err := strconv.Atoi(c.Query("pageNum"))
 	if err != nil {
 		pageNum = 1
@@ -21,8 +20,6 @@ func ViewOrders(c *gin.Context) {
 		pageSize = 10
 	}
 	var ps bool
-
-	// Get the search terms from the query parameters
 	searchOrderID := c.Query("orderID")
 	searchStatus := c.Query("status")
 	searchPaymentMethod := c.Query("paymentMethod")
@@ -32,11 +29,9 @@ func ViewOrders(c *gin.Context) {
 	} else if searchPaymentStatus == "false" {
 		ps = false
 	}
-	// Calculate the offset and limit for the query
 	offset := (pageNum - 1) * pageSize
 	limit := pageSize
 
-	// Query the database to get the orders
 	var orders []models.Orders
 	dbQuery := database.Db.Offset(offset).Limit(limit)
 
@@ -55,7 +50,6 @@ func ViewOrders(c *gin.Context) {
 
 	dbQuery.Find(&orders)
 
-	// Get the total number of orders for pagination
 	var count int64
 	dbQuery.Model(&models.Orders{}).Count(&count)
 
@@ -64,10 +58,8 @@ func ViewOrders(c *gin.Context) {
 		return
 	}
 
-	// Create a slice to hold the response
 	var ordersList []interface{}
 
-	// Loop through the orders and add the necessary fields to the response slice
 	for _, order := range orders {
 		orderDetails := map[string]interface{}{
 			"userid":        order.UsersID,
@@ -81,34 +73,50 @@ func ViewOrders(c *gin.Context) {
 		ordersList = append(ordersList, orderDetails)
 	}
 
-	// Calculate the total number of pages for pagination
 	totalPages := int(math.Ceil(float64(count) / float64(pageSize)))
 
-	// Return the response
-	c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "data": ordersList, "count": count, "totalPages": totalPages})
+	c.JSON(http.StatusOK, gin.H{"status": true, "data": ordersList, "count": count, "totalPages": totalPages})
 }
 
-// func EditOrder(c *gin.Context) {
-// 	id := c.Param("id")
-// 	var body struct {
-// 		PaymentStatus string
-// 		OrderStatus   string
-// 	}
-// 	c.Bind(&body)
-// 	var order []models.Orders
-// 	result := database.Db.First(&order, id)
-// 	database.Db.Model(&order).Updates(models.Orders{
-// 		PaymentStatus: body.PaymentStatus,
-// 		OrderStatus:   body.OrderStatus,
-// 	})
-// 	if result != nil {
-// 		c.JSON(200, gin.H{
-// 			"message": " can't find product",
-// 		})
-// 	} else {
-// 		c.JSON(200, gin.H{
-// 			"message": "order updated",
-// 		})
-// 	}
-// }
-// fp
+func EditOrder(c *gin.Context) {
+	var body struct {
+		Oderid        string `json:"orderid"`
+		Paymentstatus bool   `json:"paymentstatus"`
+		Orderstatus   bool   `json:"orderstatus"`
+	}
+	err := c.ShouldBindJSON(&body)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  false,
+			"message": "binding json faild",
+			"data":    "error ",
+		})
+		return
+	}
+	order := models.Orders{}
+	result := database.Db.Where("orderid = ?", body.Oderid).First(&order)
+	if result.Error != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  false,
+			"message": "order not found",
+			"data":    "error",
+		})
+		return
+	}
+	order.Paymentstatus = body.Paymentstatus
+	order.Status = body.Orderstatus
+	result = database.Db.Save(&order)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  false,
+			"message": "failed to update order",
+			"data":    "error",
+		})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"status":  true,
+		"message": "order updated successfully",
+		"data":    order,
+	})
+}
