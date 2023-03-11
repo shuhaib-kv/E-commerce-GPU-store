@@ -51,7 +51,7 @@ func ViewProductsUser(c *gin.Context) {
 	response := make([]gin.H, 0, len(products))
 	for _, product := range products {
 		price := product.Price
-		discountAmount := uint(0) // initialize the discount amount to zero
+		discountAmount := uint(0)
 		if product.Discount > 0 {
 			var discount models.Discount
 			if err := database.Db.First(&discount, product.Discount).Error; err == nil {

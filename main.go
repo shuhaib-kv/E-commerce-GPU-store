@@ -4,6 +4,7 @@ import (
 	"ga/initializers"
 	"ga/pkg/database"
 	"ga/pkg/routes"
+	"os"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,9 +18,9 @@ func init() {
 }
 
 func main() {
-
+	port := os.Getenv("PORT")
 	routes.UserRoutes(app)
 	routes.AdminRoutes(app)
-	app.Run(":8087")
+	app.Run(port)
 
 }
