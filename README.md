@@ -23,5 +23,5 @@ GPU Ecom is a backend web application project which provides all the important p
 
 ## POSTMAN Collection
 
-[DOWNLOAD](https://elements.getpostman.com/redirect?entityId=23876360-bfd9b8d1-2310-4ae5-80e7-db7f63040a21&entityType=collection)
+[Collection link](https://www.postman.com/joint-operations-explorer-50617005/workspace/shuhaib-projects/collection/23876360-bfd9b8d1-2310-4ae5-80e7-db7f63040a21?action=share&creator=23876360)
 
