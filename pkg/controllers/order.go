@@ -133,8 +133,8 @@ func createOrder(cartID uint, userID uint, addressID uint, paymentMethod string,
 			}
 		}
 
-		var coupon models.Coupon
 		if coupen != "" {
+			var coupon models.Coupon
 			if err := database.Db.Where("coupon_code = ?", coupen).First(&coupon).Error; err != nil {
 				if errors.Is(err, gorm.ErrRecordNotFound) {
 					return nil, errors.New("invalid coupon code")
@@ -149,7 +149,7 @@ func createOrder(cartID uint, userID uint, addressID uint, paymentMethod string,
 		}
 
 		var balance uint
-		if applaywallet {
+		if applaywallet == true {
 			var wallet models.Wallet
 			if err := database.Db.Where("users_id = ?", userID).First(&wallet).Error; err != nil {
 				if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -196,6 +196,7 @@ func createOrder(cartID uint, userID uint, addressID uint, paymentMethod string,
 		}
 
 		for _, cp := range cartProducts {
+
 			orderedItem := models.Ordereditems{
 				OrderID:     order.Orderid,
 				ProductID:   cp.Productid,
@@ -257,7 +258,7 @@ func createOrder(cartID uint, userID uint, addressID uint, paymentMethod string,
 		}
 
 		var balance uint
-		if applaywallet {
+		if applaywallet == true {
 			var wallet models.Wallet
 			if err := database.Db.Where("users_id = ?", userID).First(&wallet).Error; err != nil {
 				if errors.Is(err, gorm.ErrRecordNotFound) {
