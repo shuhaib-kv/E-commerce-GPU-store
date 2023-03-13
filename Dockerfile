@@ -1,23 +1,32 @@
-FROM golang:alpine AS builder 
+# Use the official Golang image as the base image
+FROM golang:1.17-alpine AS build
 
-WORKDIR /E-COMMERCE-PROJECT/
+# Set the working directory to /app
+WORKDIR /app
 
-COPY go.mod .
-COPY go.sum .
+# Copy the go.mod and go.sum files to the working directory
+COPY go.mod go.sum ./
 
+# Install the dependencies
 RUN go mod download
 
+# Copy the rest of the application code to the working directory
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o ecom_api .
+# Build the application
+RUN go build -o app
 
-FROM alpine:latest
+# Use a smaller base image for the final image
+FROM alpine:3.14
 
-WORKDIR /root
+# Set the working directory to /app
+WORKDIR /app
 
-COPY --from=builder /E-COMMERCE-PROJECT/ecom_api .
-     
+# Copy the application binary from the build stage to the final image
+COPY --from=build /app/app .
 
-COPY . .
+# Expose port 8080 for the application
+EXPOSE 8080
 
-CMD ["./ecom_api"]
+# Start the application
+CMD ["./app"]

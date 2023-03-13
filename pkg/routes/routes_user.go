@@ -12,15 +12,11 @@ func UserRoutes(User *gin.Engine) {
 	User.POST("/user/signup", controllers.UserSignUp)
 	User.POST("/user/login/otp/validate", controllers.CheckOtp)
 	User.POST("/user/login", controllers.UserLogin)
-
 	User.GET("/user/home", middleware.UserAuth(), controllers.UserHome)
-
 	User.GET("/user/viewproducts", middleware.UserAuth(), controllers.ViewProductsUser)
-
 	User.POST("/user/add/address", middleware.UserAuth(), controllers.AddAddress)
 	User.PATCH("/user/edit/address", middleware.UserAuth(), controllers.EditAddress)
 	User.GET("/user/view/address", middleware.UserAuth(), controllers.EditAddress)
-
 	User.GET("/payment-success", middleware.UserAuth(), controllers.RazorpaySuccess)
 	User.GET("/success", middleware.UserAuth(), controllers.Success)
 	User.GET("/user/address", middleware.UserAuth(), controllers.ShowAddress)

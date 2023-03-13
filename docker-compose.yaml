@@ -18,16 +18,15 @@ services:
 
   ecom_api:
     container_name: ecom_api
-    build: .
+    image: my-go-app  # replace with your image name and tag
     ports: 
       - 8089:8080 
     restart: on-failure
-    volumes:
-      - api:/usr/src/app/
     depends_on:
       - myapp-postgres       
     networks:
       - myapp
+    
     
   pgadmin:
     image: dpage/pgadmin4
