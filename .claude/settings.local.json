@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd /c/CODE/BROTOTYPE/E-commerce-GPU-store/web && npm create vite@latest . -- --template react 2>&1)",
+      "Bash(cd /c/CODE/BROTOTYPE/E-commerce-GPU-store/web && npm install 2>&1)",
+      "Bash(tail:*)",
+      "Bash(cd:*)",
+      "Bash(go install:*)",
+      "Bash(curl:*)"
+    ]
+  }
+}

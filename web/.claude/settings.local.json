@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(git show:*)",
+      "Bash(sort:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(cd /c/CODE/BROTOTYPE/E-commerce-GPU-store && go build ./... 2>&1)"
+    ]
+  }
+}
