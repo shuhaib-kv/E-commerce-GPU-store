@@ -51,6 +51,7 @@ func main() {
 	discountRepo := repository.NewDiscountRepo(mongoDB)
 	walletRepo := repository.NewWalletRepo(mongoDB)
 	paymentRepo := repository.NewPaymentRepo(mongoDB)
+	reviewRepo := repository.NewReviewRepo(mongoDB)
 
 	// Usecases
 	userUC := usecase.NewUserUsecase(userRepo, walletRepo, cartRepo)
@@ -63,6 +64,7 @@ func main() {
 	discountUC := usecase.NewDiscountUsecase(discountRepo)
 	walletUC := usecase.NewWalletUsecase(walletRepo)
 	paymentUC := usecase.NewPaymentUsecase(paymentRepo, orderRepo)
+	reviewUC := usecase.NewReviewUsecase(reviewRepo)
 
 	// Handlers
 	userH := handler.NewUserHandler(userUC, cfg)
@@ -75,12 +77,13 @@ func main() {
 	discountH := handler.NewDiscountHandler(discountUC)
 	walletH := handler.NewWalletHandler(walletUC)
 	paymentH := handler.NewPaymentHandler(paymentUC, cfg)
+	reviewH := handler.NewReviewHandler(reviewUC)
 
 	// Router
 	r := gin.Default()
 	r.LoadHTMLGlob("templates/*.html")
 
-	routes.Setup(r, cfg.JWTSecret, userH, adminH, productH, categoryH, cartH, orderH, couponH, discountH, walletH, paymentH)
+	routes.Setup(r, cfg.JWTSecret, userH, adminH, productH, categoryH, cartH, orderH, couponH, discountH, walletH, paymentH, reviewH)
 
 	r.Run(cfg.Port)
 }

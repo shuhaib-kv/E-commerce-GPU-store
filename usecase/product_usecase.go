@@ -89,23 +89,31 @@ func (uc *ProductUsecase) ViewProductsUser(ctx context.Context, filter bson.M, p
 	for _, product := range products {
 		price := product.Price
 		discountAmount := uint(0)
+		discountPercentage := uint(0)
 		if !product.DiscountID.IsZero() {
 			discount, err := uc.discountRepo.FindByID(ctx, product.DiscountID)
 			if err == nil {
-				discountAmount = uint(float64(price) * float64(discount.DiscountPercentage) / 100.0)
+				discountPercentage = discount.DiscountPercentage
+				discountAmount = uint(float64(price) * float64(discountPercentage) / 100.0)
 				price = price - discountAmount
 			}
 		}
 		response = append(response, map[string]interface{}{
-			"id":              product.ID,
-			"name":            product.Name,
-			"price":           price,
-			"image1":          product.Image1,
-			"image2":          product.Image2,
-			"image3":          product.Image3,
-			"brand":           product.Brand,
-			"specifications":  product.Specifications,
-			"discount_amount": discountAmount,
+			"id":                  product.ID,
+			"name":                product.Name,
+			"price":               price,
+			"original_price":      product.Price,
+			"image1":              product.Image1,
+			"image2":              product.Image2,
+			"image3":              product.Image3,
+			"brand":               product.Brand,
+			"specifications":      product.Specifications,
+			"discount_amount":     discountAmount,
+			"discount_percentage": discountPercentage,
+			"stock":               product.Stock,
+			"description":         product.Description,
+			"category_id":         product.CategoryID,
+			"model_no":            product.ModelNo,
 		})
 	}
 	return response, total, nil

@@ -16,7 +16,7 @@ var collectionNames = []string{
 	"users", "addresses", "admins", "categories", "products",
 	"product_attribute_definitions", "orders", "order_items",
 	"carts", "cart_products", "coupons", "discounts",
-	"wallets", "wallet_history", "payments",
+	"wallets", "wallet_history", "payments", "reviews",
 }
 
 func hashPassword(password string) string {
@@ -304,6 +304,31 @@ func Seed(db *mongo.Database) {
 		},
 	}
 	insertMany(ctx, db, "payments", payments)
+
+	// --- Reviews ---
+	reviews := []interface{}{
+		bson.M{
+			"_id": primitive.NewObjectID(), "user_id": user1ID, "product_id": prod1,
+			"user_name": "johndoe", "rating": 5, "comment": "Absolute beast of a GPU. 4K gaming at max settings with no issues.",
+			"created_at": now.AddDate(0, 0, -5),
+		},
+		bson.M{
+			"_id": primitive.NewObjectID(), "user_id": user2ID, "product_id": prod1,
+			"user_name": "janesmith", "rating": 4, "comment": "Amazing performance but runs a bit hot. Great for ray tracing.",
+			"created_at": now.AddDate(0, 0, -3),
+		},
+		bson.M{
+			"_id": primitive.NewObjectID(), "user_id": user1ID, "product_id": prod7,
+			"user_name": "johndoe", "rating": 4, "comment": "Best value card for 1080p gaming. DLSS 3 is a game changer.",
+			"created_at": now.AddDate(0, 0, -2),
+		},
+		bson.M{
+			"_id": primitive.NewObjectID(), "user_id": user2ID, "product_id": prod3,
+			"user_name": "janesmith", "rating": 5, "comment": "AMD's best GPU yet. 24GB VRAM is future-proof.",
+			"created_at": now.AddDate(0, 0, -1),
+		},
+	}
+	insertMany(ctx, db, "reviews", reviews)
 
 	fmt.Println("[SEED] All collections seeded successfully.")
 	fmt.Println("")

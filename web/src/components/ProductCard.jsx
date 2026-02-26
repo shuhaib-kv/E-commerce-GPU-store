@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { ShoppingCart, Cpu } from 'lucide-react'
 import api from '../api/axios'
@@ -27,6 +28,7 @@ export default function ProductCard({ product, onAddToCart }) {
     : null
 
   return (
+    <Link to={`/products/${product.id}`} className="block">
     <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition group border border-gray-100">
       <div className="h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center relative overflow-hidden">
         {imgSrc ? (
@@ -61,7 +63,7 @@ export default function ProductCard({ product, onAddToCart }) {
         </p>
         {user && product.stock > 0 && (
           <button
-            onClick={handleAddToCart}
+            onClick={(e) => { e.preventDefault(); handleAddToCart() }}
             className="mt-3 w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg transition font-medium text-sm"
           >
             <ShoppingCart size={16} />
@@ -70,5 +72,6 @@ export default function ProductCard({ product, onAddToCart }) {
         )}
       </div>
     </div>
+    </Link>
   )
 }

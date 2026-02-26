@@ -20,6 +20,7 @@ func Setup(
 	discountH *handler.DiscountHandler,
 	walletH *handler.WalletHandler,
 	paymentH *handler.PaymentHandler,
+	reviewH *handler.ReviewHandler,
 ) {
 	adminAuth := middleware.AdminAuth(jwtSecret)
 	userAuth := middleware.UserAuth(jwtSecret)
@@ -31,6 +32,10 @@ func Setup(
 	// Public routes (no auth required)
 	r.GET("/user/viewproducts", productH.ViewProductsUser)
 	r.GET("/categories", categoryH.ViewCategory)
+	r.GET("/reviews/:productId", reviewH.GetProductReviews)
+
+	// Review routes (auth required)
+	r.POST("/reviews", userAuth, reviewH.AddReview)
 
 	// User protected routes
 	user := r.Group("/user", userAuth)

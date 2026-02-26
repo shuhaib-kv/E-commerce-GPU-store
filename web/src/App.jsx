@@ -14,6 +14,7 @@ import Cart from './pages/user/Cart'
 import Orders from './pages/user/Orders'
 import Address from './pages/user/Address'
 import Wallet from './pages/user/Wallet'
+import ProductDetail from './pages/user/ProductDetail'
 
 import AdminLogin from './pages/admin/Login'
 import Dashboard from './pages/admin/Dashboard'
@@ -55,6 +56,7 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/products" element={<Products />} />
+          <Route path="/products/:id" element={<ProductDetail />} />
           <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
           <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
           <Route path="/address" element={<ProtectedRoute><Address /></ProtectedRoute>} />
