@@ -23,24 +23,24 @@ func (h *CategoryHandler) AddCategory(c *gin.Context) {
 		Name string `json:"name" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": err.Error()})
+		respondError(c, http.StatusBadRequest, err.Error())
 		return
 	}
 	cat, err := h.categoryUC.AddCategory(c.Request.Context(), body.Name)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": err.Error()})
+		respondError(c, http.StatusBadRequest, err.Error())
 		return
 	}
-	c.JSON(http.StatusCreated, gin.H{"status": true, "message": "Category created", "data": cat})
+	respondSuccess(c, http.StatusCreated, "Category created", cat)
 }
 
 func (h *CategoryHandler) ViewCategory(c *gin.Context) {
 	cats, err := h.categoryUC.ViewAll(c.Request.Context())
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": false, "message": err.Error()})
+		respondInternalError(c, err, "ViewCategory")
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"status": true, "data": cats})
+	respondSuccess(c, http.StatusOK, "", cats)
 }
 
 func (h *CategoryHandler) EditCategory(c *gin.Context) {
@@ -49,19 +49,19 @@ func (h *CategoryHandler) EditCategory(c *gin.Context) {
 		Name string `json:"name" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": err.Error()})
+		respondError(c, http.StatusBadRequest, err.Error())
 		return
 	}
 	id, err := primitive.ObjectIDFromHex(body.ID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Invalid ID"})
+		respondError(c, http.StatusBadRequest, "Invalid ID")
 		return
 	}
 	if err := h.categoryUC.EditCategory(c.Request.Context(), id, body.Name); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": false, "message": err.Error()})
+		respondInternalError(c, err, "EditCategory")
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"status": true, "message": "Category updated"})
+	respondSuccess(c, http.StatusOK, "Category updated", nil)
 }
 
 func (h *CategoryHandler) DeleteCategory(c *gin.Context) {
@@ -69,34 +69,33 @@ func (h *CategoryHandler) DeleteCategory(c *gin.Context) {
 		ID string `json:"id" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": err.Error()})
+		respondError(c, http.StatusBadRequest, err.Error())
 		return
 	}
 	id, err := primitive.ObjectIDFromHex(body.ID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Invalid ID"})
+		respondError(c, http.StatusBadRequest, "Invalid ID")
 		return
 	}
 	if err := h.categoryUC.DeleteCategory(c.Request.Context(), id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": false, "message": err.Error()})
+		respondInternalError(c, err, "DeleteCategory")
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"status": true, "message": "Category deleted"})
+	respondSuccess(c, http.StatusOK, "Category deleted", nil)
 }
 
 func (h *CategoryHandler) ViewProductByCategory(c *gin.Context) {
 	idStr := c.Query("id")
 	id, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Invalid category ID"})
+		respondError(c, http.StatusBadRequest, "Invalid category ID")
 		return
 	}
 	filter := bson.M{"category_id": id}
 	products, total, err := h.productUC.ViewProductsUser(c.Request.Context(), filter, 1, 100)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": false, "message": err.Error()})
+		respondInternalError(c, err, "ViewProductByCategory")
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"status": true, "data": products, "total": total})
 }
-

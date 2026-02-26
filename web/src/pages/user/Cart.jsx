@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import toast from 'react-hot-toast'
 import api from '../../api/axios'
 import CartItem from '../../components/CartItem'
 
@@ -15,29 +16,32 @@ export default function Cart() {
   useEffect(() => {
     api.get('/user/cart/view')
       .then((res) => {
-        setItems(res.data.cart_products || [])
-        setTotal(res.data.total || 0)
+        setItems(res.data.data || [])
+        setTotal(res.data.total_amount || 0)
       })
-      .catch(() => {})
+      .catch((err) => toast.error(err.response?.data?.message || 'Failed to load cart'))
     api.get('/user/address')
-      .then((res) => setAddresses(res.data.address || []))
-      .catch(() => {})
+      .then((res) => {
+        const addr = res.data.data
+        setAddresses(addr ? [addr] : [])
+      })
+      .catch((err) => toast.error(err.response?.data?.message || 'Failed to load addresses'))
   }, [])
 
   const handleOrder = async () => {
-    if (!addressId) return alert('Please select an address')
+    if (!addressId) return toast.error('Please select an address')
     try {
       const body = { address_id: addressId, payment_method: paymentMethod }
       if (coupon) body.coupon_code = coupon
       const res = await api.post('/cart/order', body)
-      if (paymentMethod === 'razorpay' && res.data.razorpay_order_id) {
-        window.location.href = `/razorpay?user_id=${res.data.user_id}&order_id=${res.data.order_id}&amount=${res.data.amount}`
+      if (paymentMethod === 'razorpay') {
+        window.location.href = `/razorpay`
       } else {
-        alert('Order placed successfully!')
+        toast.success('Order placed successfully!')
         navigate('/orders')
       }
     } catch (err) {
-      alert(err.response?.data?.error || 'Order failed')
+      toast.error(err.response?.data?.message || 'Order failed')
     }
   }
 
@@ -51,7 +55,7 @@ export default function Cart() {
         <>
           <div className="flex flex-col gap-4 mb-8">
             {items.map((item) => (
-              <CartItem key={item._id} item={item} />
+              <CartItem key={item.id} item={item} />
             ))}
           </div>
 
@@ -71,7 +75,7 @@ export default function Cart() {
                 >
                   <option value="">Select address</option>
                   {addresses.map((a) => (
-                    <option key={a._id} value={a._id}>
+                    <option key={a.id} value={a.id}>
                       {a.name} - {a.house}, {a.city} ({a.pincode})
                     </option>
                   ))}

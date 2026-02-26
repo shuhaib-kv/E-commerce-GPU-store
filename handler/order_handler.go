@@ -21,7 +21,7 @@ func NewOrderHandler(ouc *usecase.OrderUsecase) *OrderHandler {
 func (h *OrderHandler) OrderCart(c *gin.Context) {
 	userID, err := primitive.ObjectIDFromHex(c.GetString("user_id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Invalid user"})
+		respondError(c, http.StatusBadRequest, "Invalid user")
 		return
 	}
 
@@ -32,19 +32,19 @@ func (h *OrderHandler) OrderCart(c *gin.Context) {
 		CouponCode    string `json:"coupon_code"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": err.Error()})
+		respondError(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	addressID, err := primitive.ObjectIDFromHex(body.AddressID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Invalid address ID"})
+		respondError(c, http.StatusBadRequest, "Invalid address ID")
 		return
 	}
 
 	orderID, amount, err := h.orderUC.CreateOrder(c.Request.Context(), userID, addressID, body.PaymentMethod, body.CouponCode, body.ApplyWallet)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": err.Error()})
+		respondError(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -57,22 +57,22 @@ func (h *OrderHandler) OrderCart(c *gin.Context) {
 func (h *OrderHandler) ListOrders(c *gin.Context) {
 	userID, err := primitive.ObjectIDFromHex(c.GetString("user_id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Invalid user"})
+		respondError(c, http.StatusBadRequest, "Invalid user")
 		return
 	}
 
 	orders, err := h.orderUC.ListOrders(c.Request.Context(), userID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": false, "message": err.Error()})
+		respondInternalError(c, err, "ListOrders")
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"status": true, "data": orders})
+	respondSuccess(c, http.StatusOK, "", orders)
 }
 
 func (h *OrderHandler) CancelOrder(c *gin.Context) {
 	userID, err := primitive.ObjectIDFromHex(c.GetString("user_id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Invalid user"})
+		respondError(c, http.StatusBadRequest, "Invalid user")
 		return
 	}
 
@@ -80,15 +80,15 @@ func (h *OrderHandler) CancelOrder(c *gin.Context) {
 		OrderID string `json:"orderid" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": err.Error()})
+		respondError(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	if err := h.orderUC.CancelOrder(c.Request.Context(), userID, body.OrderID); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": err.Error()})
+		respondError(c, http.StatusBadRequest, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"status": true, "message": "Order cancelled"})
+	respondSuccess(c, http.StatusOK, "Order cancelled", nil)
 }
 
 // Admin
@@ -112,7 +112,7 @@ func (h *OrderHandler) ViewOrders(c *gin.Context) {
 
 	orders, total, err := h.orderUC.ListAllOrders(c.Request.Context(), filter, page, pageSize)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": false, "message": err.Error()})
+		respondInternalError(c, err, "ViewOrders")
 		return
 	}
 
@@ -130,7 +130,7 @@ func (h *OrderHandler) EditOrder(c *gin.Context) {
 		PaymentStatus string `json:"paymentstatus"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": err.Error()})
+		respondError(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -138,8 +138,8 @@ func (h *OrderHandler) EditOrder(c *gin.Context) {
 	paymentStatus, _ := strconv.ParseBool(body.PaymentStatus)
 
 	if err := h.orderUC.EditOrder(c.Request.Context(), body.OrderID, status, paymentStatus); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": false, "message": err.Error()})
+		respondInternalError(c, err, "EditOrder")
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"status": true, "message": "Order updated"})
+	respondSuccess(c, http.StatusOK, "Order updated", nil)
 }

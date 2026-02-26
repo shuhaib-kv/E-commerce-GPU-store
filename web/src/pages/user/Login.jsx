@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import toast from 'react-hot-toast'
 import api from '../../api/axios'
 import { useAuth } from '../../context/AuthContext'
 
@@ -14,10 +15,11 @@ export default function Login() {
     setError('')
     try {
       const res = await api.post('/user/login', form)
-      loginUser(res.data.user || { email: form.email })
+      toast.success('Login successful')
+      loginUser({ email: form.email })
       navigate('/')
     } catch (err) {
-      setError(err.response?.data?.error || 'Login failed')
+      setError(err.response?.data?.message || 'Login failed')
     }
   }
 
@@ -49,6 +51,9 @@ export default function Login() {
         </form>
         <p className="mt-4 text-center text-sm text-gray-600">
           Don't have an account? <Link to="/signup" className="text-green-600 hover:underline">Sign Up</Link>
+        </p>
+        <p className="mt-2 text-center text-sm text-gray-600">
+          <Link to="/admin/login" className="text-gray-500 hover:underline">Admin Login</Link>
         </p>
       </div>
     </div>

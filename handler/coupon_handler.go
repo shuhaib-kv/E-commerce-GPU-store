@@ -24,16 +24,16 @@ func (h *CouponHandler) AddCoupon(c *gin.Context) {
 		ExpiresAt        uint   `json:"expiresat" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": err.Error()})
+		respondError(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	coupon, err := h.couponUC.AddCoupon(c.Request.Context(), body.CouponName, body.CouponPercentage, body.ExpiresAt)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": err.Error()})
+		respondError(c, http.StatusBadRequest, err.Error())
 		return
 	}
-	c.JSON(http.StatusCreated, gin.H{"status": true, "message": "Coupon created", "data": coupon})
+	respondSuccess(c, http.StatusCreated, "Coupon created", coupon)
 }
 
 func (h *CouponHandler) DeleteCoupon(c *gin.Context) {
@@ -41,14 +41,14 @@ func (h *CouponHandler) DeleteCoupon(c *gin.Context) {
 		CouponName string `json:"couponname" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": err.Error()})
+		respondError(c, http.StatusBadRequest, err.Error())
 		return
 	}
 	if err := h.couponUC.DeleteCoupon(c.Request.Context(), body.CouponName); err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"status": false, "message": "Coupon not found"})
+		respondError(c, http.StatusNotFound, "Coupon not found")
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"status": true, "message": "Coupon deleted"})
+	respondSuccess(c, http.StatusOK, "Coupon deleted", nil)
 }
 
 func (h *CouponHandler) ListCoupons(c *gin.Context) {
@@ -68,7 +68,7 @@ func (h *CouponHandler) ListCoupons(c *gin.Context) {
 
 	coupons, total, err := h.couponUC.ListCoupons(c.Request.Context(), filter, page, pageSize)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": false, "message": err.Error()})
+		respondInternalError(c, err, "ListCoupons")
 		return
 	}
 

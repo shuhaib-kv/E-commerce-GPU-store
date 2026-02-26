@@ -24,15 +24,15 @@ func (h *DiscountHandler) AddDiscount(c *gin.Context) {
 		DiscountPercentage uint   `json:"discountpercentage" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": err.Error()})
+		respondError(c, http.StatusBadRequest, err.Error())
 		return
 	}
 	discount, err := h.discountUC.AddDiscount(c.Request.Context(), body.DiscountName, body.DiscountPercentage)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": false, "message": err.Error()})
+		respondInternalError(c, err, "AddDiscount")
 		return
 	}
-	c.JSON(http.StatusCreated, gin.H{"status": true, "message": "Discount created", "data": discount})
+	respondSuccess(c, http.StatusCreated, "Discount created", discount)
 }
 
 func (h *DiscountHandler) DeleteDiscount(c *gin.Context) {
@@ -40,19 +40,19 @@ func (h *DiscountHandler) DeleteDiscount(c *gin.Context) {
 		ID string `json:"id" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": err.Error()})
+		respondError(c, http.StatusBadRequest, err.Error())
 		return
 	}
 	id, err := primitive.ObjectIDFromHex(body.ID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Invalid ID"})
+		respondError(c, http.StatusBadRequest, "Invalid ID")
 		return
 	}
 	if err := h.discountUC.DeleteDiscount(c.Request.Context(), id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": false, "message": err.Error()})
+		respondInternalError(c, err, "DeleteDiscount")
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"status": true, "message": "Discount deleted"})
+	respondSuccess(c, http.StatusOK, "Discount deleted", nil)
 }
 
 func (h *DiscountHandler) GetDiscounts(c *gin.Context) {
@@ -74,7 +74,7 @@ func (h *DiscountHandler) GetDiscounts(c *gin.Context) {
 
 	discounts, total, err := h.discountUC.ListDiscounts(c.Request.Context(), filter, page, pageSize)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": false, "message": err.Error()})
+		respondInternalError(c, err, "GetDiscounts")
 		return
 	}
 

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
 import api from '../../api/axios'
 
 export default function Users() {
@@ -6,26 +7,41 @@ export default function Users() {
 
   const fetchUsers = () => {
     api.get('/admin/users')
-      .then((res) => setUsers(res.data.users || []))
-      .catch(() => {})
+      .then((res) => setUsers(res.data.data || []))
+      .catch((err) => toast.error(err.response?.data?.message || 'Failed to load users'))
   }
 
   useEffect(() => { fetchUsers() }, [])
 
   const blockUser = async (id) => {
-    await api.patch('/admin/users/block', { user_id: id })
-    fetchUsers()
+    try {
+      await api.patch('/admin/users/block', { id })
+      toast.success('User blocked')
+      fetchUsers()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to block user')
+    }
   }
 
   const unblockUser = async (id) => {
-    await api.patch('/admin/users/unblock', { user_id: id })
-    fetchUsers()
+    try {
+      await api.patch('/admin/users/unblock', { id })
+      toast.success('User unblocked')
+      fetchUsers()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to unblock user')
+    }
   }
 
   const deleteUser = async (id) => {
     if (!confirm('Delete this user?')) return
-    await api.delete('/admin/users/delete', { data: { user_id: id } })
-    fetchUsers()
+    try {
+      await api.delete('/admin/users/delete', { data: { id } })
+      toast.success('User deleted')
+      fetchUsers()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to delete user')
+    }
   }
 
   return (
@@ -44,7 +60,7 @@ export default function Users() {
           </thead>
           <tbody>
             {users.map((u) => (
-              <tr key={u._id} className="border-b hover:bg-gray-50">
+              <tr key={u.id} className="border-b hover:bg-gray-50">
                 <td className="px-4 py-3">{u.first_name} {u.last_name}</td>
                 <td className="px-4 py-3">{u.email}</td>
                 <td className="px-4 py-3">{u.phone}</td>
@@ -55,11 +71,11 @@ export default function Users() {
                 </td>
                 <td className="px-4 py-3 flex gap-2">
                   {u.block_status ? (
-                    <button onClick={() => unblockUser(u._id)} className="text-green-600 hover:underline text-sm">Unblock</button>
+                    <button onClick={() => unblockUser(u.id)} className="text-green-600 hover:underline text-sm">Unblock</button>
                   ) : (
-                    <button onClick={() => blockUser(u._id)} className="text-yellow-600 hover:underline text-sm">Block</button>
+                    <button onClick={() => blockUser(u.id)} className="text-yellow-600 hover:underline text-sm">Block</button>
                   )}
-                  <button onClick={() => deleteUser(u._id)} className="text-red-600 hover:underline text-sm">Delete</button>
+                  <button onClick={() => deleteUser(u.id)} className="text-red-600 hover:underline text-sm">Delete</button>
                 </td>
               </tr>
             ))}

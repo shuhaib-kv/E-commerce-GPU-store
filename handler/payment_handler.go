@@ -24,13 +24,13 @@ func NewPaymentHandler(puc *usecase.PaymentUsecase, cfg *config.Config) *Payment
 func (h *PaymentHandler) RazorPay(c *gin.Context) {
 	userID, err := primitive.ObjectIDFromHex(c.GetString("user_id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Invalid user"})
+		respondError(c, http.StatusBadRequest, "Invalid user")
 		return
 	}
 
 	order, err := h.paymentUC.GetPendingOrder(c.Request.Context(), userID)
 	if err != nil || order == nil {
-		c.JSON(http.StatusNotFound, gin.H{"status": false, "message": "No pending order"})
+		respondError(c, http.StatusNotFound, "No pending order")
 		return
 	}
 
@@ -43,7 +43,7 @@ func (h *PaymentHandler) RazorPay(c *gin.Context) {
 	}
 	rzpOrder, err := client.Order.Create(data, nil)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": false, "message": "Failed to create payment"})
+		respondInternalError(c, err, "RazorPay.CreateOrder")
 		return
 	}
 
@@ -66,7 +66,7 @@ func (h *PaymentHandler) RazorpaySuccess(c *gin.Context) {
 
 	userID, err := primitive.ObjectIDFromHex(userIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Invalid user"})
+		respondError(c, http.StatusBadRequest, "Invalid user")
 		return
 	}
 
@@ -81,7 +81,7 @@ func (h *PaymentHandler) RazorpaySuccess(c *gin.Context) {
 	}
 
 	if err := h.paymentUC.SavePayment(c.Request.Context(), payment); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": false, "message": err.Error()})
+		respondInternalError(c, err, "RazorpaySuccess.SavePayment")
 		return
 	}
 

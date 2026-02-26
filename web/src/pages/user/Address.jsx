@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
 import api from '../../api/axios'
 
 export default function Address() {
@@ -9,8 +10,11 @@ export default function Address() {
 
   const fetchAddresses = () => {
     api.get('/user/address')
-      .then((res) => setAddresses(res.data.address || []))
-      .catch(() => {})
+      .then((res) => {
+        const addr = res.data.data
+        setAddresses(addr ? [addr] : [])
+      })
+      .catch((err) => toast.error(err.response?.data?.message || 'Failed to load addresses'))
   }
 
   useEffect(() => { fetchAddresses() }, [])
@@ -25,18 +29,19 @@ export default function Address() {
       } else {
         await api.post('/user/add/address', form)
       }
+      toast.success(editing ? 'Address updated' : 'Address added')
       setForm({ name: '', phone_number: '', pincode: '', house: '', area: '', landmark: '', city: '' })
       setEditing(null)
       setShowForm(false)
       fetchAddresses()
     } catch (err) {
-      alert(err.response?.data?.error || 'Failed to save address')
+      toast.error(err.response?.data?.message || 'Failed to save address')
     }
   }
 
   const startEdit = (addr) => {
     setForm({ name: addr.name, phone_number: addr.phone_number, pincode: addr.pincode, house: addr.house, area: addr.area, landmark: addr.landmark, city: addr.city })
-    setEditing(addr._id)
+    setEditing(addr.id)
     setShowForm(true)
   }
 
@@ -66,7 +71,7 @@ export default function Address() {
 
       <div className="flex flex-col gap-4">
         {addresses.map((a) => (
-          <div key={a._id} className="bg-white p-4 rounded-lg shadow flex justify-between items-center">
+          <div key={a.id} className="bg-white p-4 rounded-lg shadow flex justify-between items-center">
             <div>
               <p className="font-semibold">{a.name}</p>
               <p className="text-sm text-gray-600">{a.house}, {a.area}, {a.city} - {a.pincode}</p>

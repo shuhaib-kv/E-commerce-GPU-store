@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import toast from 'react-hot-toast'
 import api from '../../api/axios'
 import ProductCard from '../../components/ProductCard'
 
@@ -7,9 +8,9 @@ export default function Home() {
   const [products, setProducts] = useState([])
 
   useEffect(() => {
-    api.get('/user/viewproducts?page_size=8&page_index=1')
-      .then((res) => setProducts(res.data.products || []))
-      .catch(() => {})
+    api.get('/user/viewproducts?pageSize=8&page=1')
+      .then((res) => setProducts(res.data.data || []))
+      .catch((err) => toast.error(err.response?.data?.message || 'Failed to load products'))
   }, [])
 
   return (
@@ -33,7 +34,7 @@ export default function Home() {
         <h2 className="text-2xl font-bold mb-6">Featured Products</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {products.map((p) => (
-            <ProductCard key={p._id} product={p} />
+            <ProductCard key={p.id} product={p} />
           ))}
         </div>
         {products.length === 0 && (

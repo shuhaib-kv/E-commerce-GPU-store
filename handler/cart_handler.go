@@ -19,7 +19,7 @@ func NewCartHandler(cuc *usecase.CartUsecase) *CartHandler {
 func (h *CartHandler) AddToCart(c *gin.Context) {
 	userID, err := primitive.ObjectIDFromHex(c.GetString("user_id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Invalid user"})
+		respondError(c, http.StatusBadRequest, "Invalid user")
 		return
 	}
 
@@ -28,34 +28,34 @@ func (h *CartHandler) AddToCart(c *gin.Context) {
 		Quantity  uint   `json:"quantity" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": err.Error()})
+		respondError(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	productID, err := primitive.ObjectIDFromHex(body.ProductID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Invalid product ID"})
+		respondError(c, http.StatusBadRequest, "Invalid product ID")
 		return
 	}
 
 	result, err := h.cartUC.AddToCart(c.Request.Context(), userID, productID, body.Quantity)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": err.Error()})
+		respondError(c, http.StatusBadRequest, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"status": true, "message": "Added to cart", "data": result})
+	respondSuccess(c, http.StatusOK, "Added to cart", result)
 }
 
 func (h *CartHandler) ViewCart(c *gin.Context) {
 	userID, err := primitive.ObjectIDFromHex(c.GetString("user_id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Invalid user"})
+		respondError(c, http.StatusBadRequest, "Invalid user")
 		return
 	}
 
 	items, total, err := h.cartUC.ViewCart(c.Request.Context(), userID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": err.Error()})
+		respondError(c, http.StatusBadRequest, err.Error())
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"status": true, "data": items, "total_amount": total})

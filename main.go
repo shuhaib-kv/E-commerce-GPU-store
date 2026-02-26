@@ -1,12 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"ga/config"
 	"ga/database"
 	"ga/handler"
 	"ga/repository"
 	"ga/routes"
 	"ga/usecase"
+	"os"
 
 	"github.com/gin-gonic/gin"
 )
@@ -18,6 +20,25 @@ func main() {
 	db := database.ConnectMongoDB(cfg.MongoURI, cfg.MongoDatabase)
 	defer db.Disconnect()
 	mongoDB := db.Database
+
+	// Handle seed/drop commands
+	if len(os.Args) > 1 {
+		switch os.Args[1] {
+		case "seed":
+			database.Seed(mongoDB)
+			return
+		case "drop":
+			database.Drop(mongoDB)
+			return
+		case "reseed":
+			database.Drop(mongoDB)
+			database.Seed(mongoDB)
+			return
+		default:
+			fmt.Printf("Unknown command: %s\nUsage: go run . [seed|drop|reseed]\n", os.Args[1])
+			return
+		}
+	}
 
 	// Repositories
 	userRepo := repository.NewUserRepo(mongoDB)

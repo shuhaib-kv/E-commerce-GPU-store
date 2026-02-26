@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import toast from 'react-hot-toast'
 import api from '../../api/axios'
 import { useAuth } from '../../context/AuthContext'
 
@@ -14,10 +15,11 @@ export default function AdminLogin() {
     setError('')
     try {
       const res = await api.post('/admin', form)
-      loginAdmin(res.data.admin || { email: form.email })
+      toast.success('Login successful')
+      loginAdmin({ email: form.email })
       navigate('/admin/dashboard')
     } catch (err) {
-      setError(err.response?.data?.error || 'Login failed')
+      setError(err.response?.data?.message || 'Login failed')
     }
   }
 

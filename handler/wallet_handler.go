@@ -19,13 +19,13 @@ func NewWalletHandler(wuc *usecase.WalletUsecase) *WalletHandler {
 func (h *WalletHandler) WalletInfo(c *gin.Context) {
 	userID, err := primitive.ObjectIDFromHex(c.GetString("user_id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Invalid user"})
+		respondError(c, http.StatusBadRequest, "Invalid user")
 		return
 	}
 
 	wallet, history, err := h.walletUC.GetWalletInfo(c.Request.Context(), userID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": false, "message": err.Error()})
+		respondInternalError(c, err, "WalletInfo")
 		return
 	}
 

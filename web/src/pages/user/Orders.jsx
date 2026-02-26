@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
 import api from '../../api/axios'
 
 export default function Orders() {
@@ -6,18 +7,18 @@ export default function Orders() {
 
   useEffect(() => {
     api.get('/user/orderview')
-      .then((res) => setOrders(res.data.orders || []))
-      .catch(() => {})
+      .then((res) => setOrders(res.data.data || []))
+      .catch((err) => toast.error(err.response?.data?.message || 'Failed to load orders'))
   }, [])
 
   const cancelOrder = async (orderId) => {
     if (!confirm('Cancel this order?')) return
     try {
-      await api.post('/user/cancel/order', { order_id: orderId })
+      await api.post('/user/cancel/order', { orderid: orderId })
       setOrders((prev) => prev.filter((o) => o.order_id !== orderId))
-      alert('Order cancelled')
+      toast.success('Order cancelled')
     } catch (err) {
-      alert(err.response?.data?.error || 'Failed to cancel')
+      toast.error(err.response?.data?.message || 'Failed to cancel')
     }
   }
 
@@ -30,7 +31,7 @@ export default function Orders() {
       ) : (
         <div className="flex flex-col gap-4">
           {orders.map((order) => (
-            <div key={order._id} className="bg-white p-6 rounded-lg shadow">
+            <div key={order.id} className="bg-white p-6 rounded-lg shadow">
               <div className="flex justify-between items-start mb-3">
                 <div>
                   <p className="font-semibold">Order #{order.order_id?.slice(0, 8)}</p>

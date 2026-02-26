@@ -1,15 +1,16 @@
 import { useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
 import api from '../../api/axios'
 
 export default function Coupons() {
   const [coupons, setCoupons] = useState([])
-  const [form, setForm] = useState({ coupon_name: '', coupon_code: '', coupon_percentage: '', expiry_date: '' })
+  const [form, setForm] = useState({ couponname: '', couponpercentage: '', expiresat: '' })
   const [showForm, setShowForm] = useState(false)
 
   const fetchCoupons = () => {
     api.get('/admin/list/coupons')
-      .then((res) => setCoupons(res.data.coupons || []))
-      .catch(() => {})
+      .then((res) => setCoupons(res.data.data || []))
+      .catch((err) => toast.error(err.response?.data?.message || 'Failed to load coupons'))
   }
 
   useEffect(() => { fetchCoupons() }, [])
@@ -18,21 +19,28 @@ export default function Coupons() {
     e.preventDefault()
     try {
       await api.post('/admin/add/coupon', {
-        ...form,
-        coupon_percentage: parseInt(form.coupon_percentage),
+        couponname: form.couponname,
+        couponpercentage: parseInt(form.couponpercentage),
+        expiresat: parseInt(form.expiresat),
       })
-      setForm({ coupon_name: '', coupon_code: '', coupon_percentage: '', expiry_date: '' })
+      toast.success('Coupon added')
+      setForm({ couponname: '', couponpercentage: '', expiresat: '' })
       setShowForm(false)
       fetchCoupons()
     } catch (err) {
-      alert(err.response?.data?.error || 'Failed to add coupon')
+      toast.error(err.response?.data?.message || 'Failed to add coupon')
     }
   }
 
-  const deleteCoupon = async (id) => {
+  const deleteCoupon = async (couponName) => {
     if (!confirm('Delete this coupon?')) return
-    await api.delete('/admin/delete/coupon', { data: { coupon_id: id } })
-    fetchCoupons()
+    try {
+      await api.delete('/admin/delete/coupon', { data: { couponname: couponName } })
+      toast.success('Coupon deleted')
+      fetchCoupons()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to delete coupon')
+    }
   }
 
   return (
@@ -46,10 +54,9 @@ export default function Coupons() {
 
       {showForm && (
         <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <input placeholder="Coupon Name" value={form.coupon_name} onChange={(e) => setForm({ ...form, coupon_name: e.target.value })} className="border rounded px-3 py-2" required />
-          <input placeholder="Coupon Code" value={form.coupon_code} onChange={(e) => setForm({ ...form, coupon_code: e.target.value })} className="border rounded px-3 py-2" required />
-          <input type="number" placeholder="Discount %" value={form.coupon_percentage} onChange={(e) => setForm({ ...form, coupon_percentage: e.target.value })} className="border rounded px-3 py-2" required />
-          <input type="date" value={form.expiry_date} onChange={(e) => setForm({ ...form, expiry_date: e.target.value })} className="border rounded px-3 py-2" required />
+          <input placeholder="Coupon Name" value={form.couponname} onChange={(e) => setForm({ ...form, couponname: e.target.value })} className="border rounded px-3 py-2" required />
+          <input type="number" placeholder="Discount %" value={form.couponpercentage} onChange={(e) => setForm({ ...form, couponpercentage: e.target.value })} className="border rounded px-3 py-2" required />
+          <input type="number" placeholder="Expires in (days)" value={form.expiresat} onChange={(e) => setForm({ ...form, expiresat: e.target.value })} className="border rounded px-3 py-2" required />
           <button className="bg-green-600 hover:bg-green-700 text-white py-2 rounded transition font-semibold md:col-span-2">Add Coupon</button>
         </form>
       )}
@@ -67,13 +74,13 @@ export default function Coupons() {
           </thead>
           <tbody>
             {coupons.map((c) => (
-              <tr key={c._id} className="border-b hover:bg-gray-50">
+              <tr key={c.id} className="border-b hover:bg-gray-50">
                 <td className="px-4 py-3">{c.coupon_name}</td>
                 <td className="px-4 py-3 font-mono">{c.coupon_code}</td>
                 <td className="px-4 py-3">{c.coupon_percentage}%</td>
                 <td className="px-4 py-3">{new Date(c.expiry_date).toLocaleDateString()}</td>
                 <td className="px-4 py-3">
-                  <button onClick={() => deleteCoupon(c._id)} className="text-red-600 hover:underline text-sm">Delete</button>
+                  <button onClick={() => deleteCoupon(c.coupon_name)} className="text-red-600 hover:underline text-sm">Delete</button>
                 </td>
               </tr>
             ))}

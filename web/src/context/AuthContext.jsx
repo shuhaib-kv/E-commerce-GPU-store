@@ -2,14 +2,35 @@ import { createContext, useContext, useState } from 'react'
 
 const AuthContext = createContext()
 
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null)
-  const [admin, setAdmin] = useState(null)
+function loadFromStorage(key) {
+  try {
+    const val = localStorage.getItem(key)
+    return val ? JSON.parse(val) : null
+  } catch {
+    return null
+  }
+}
 
-  const loginUser = (userData) => setUser(userData)
-  const logoutUser = () => setUser(null)
-  const loginAdmin = (adminData) => setAdmin(adminData)
-  const logoutAdmin = () => setAdmin(null)
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(() => loadFromStorage('user'))
+  const [admin, setAdmin] = useState(() => loadFromStorage('admin'))
+
+  const loginUser = (userData) => {
+    setUser(userData)
+    localStorage.setItem('user', JSON.stringify(userData))
+  }
+  const logoutUser = () => {
+    setUser(null)
+    localStorage.removeItem('user')
+  }
+  const loginAdmin = (adminData) => {
+    setAdmin(adminData)
+    localStorage.setItem('admin', JSON.stringify(adminData))
+  }
+  const logoutAdmin = () => {
+    setAdmin(null)
+    localStorage.removeItem('admin')
+  }
 
   return (
     <AuthContext.Provider value={{ user, admin, loginUser, logoutUser, loginAdmin, logoutAdmin }}>

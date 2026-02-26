@@ -1,4 +1,6 @@
 import { Routes, Route, Outlet } from 'react-router-dom'
+import { Toaster } from 'react-hot-toast'
+import ErrorBoundary from './components/ErrorBoundary'
 import Navbar from './components/Navbar'
 import AdminSidebar from './components/AdminSidebar'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -44,30 +46,33 @@ function AdminLayout() {
 
 export default function App() {
   return (
-    <Routes>
-      {/* User routes */}
-      <Route element={<UserLayout />}>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/products" element={<Products />} />
-        <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
-        <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
-        <Route path="/address" element={<ProtectedRoute><Address /></ProtectedRoute>} />
-        <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
-      </Route>
+    <ErrorBoundary>
+      <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
+      <Routes>
+        {/* User routes */}
+        <Route element={<UserLayout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/products" element={<Products />} />
+          <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+          <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
+          <Route path="/address" element={<ProtectedRoute><Address /></ProtectedRoute>} />
+          <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
+        </Route>
 
-      {/* Admin routes */}
-      <Route path="/admin/login" element={<AdminLogin />} />
-      <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
-        <Route path="dashboard" element={<Dashboard />} />
-        <Route path="users" element={<Users />} />
-        <Route path="products" element={<AdminProducts />} />
-        <Route path="categories" element={<Categories />} />
-        <Route path="orders" element={<AdminOrders />} />
-        <Route path="coupons" element={<Coupons />} />
-        <Route path="discounts" element={<Discounts />} />
-      </Route>
-    </Routes>
+        {/* Admin routes */}
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="users" element={<Users />} />
+          <Route path="products" element={<AdminProducts />} />
+          <Route path="categories" element={<Categories />} />
+          <Route path="orders" element={<AdminOrders />} />
+          <Route path="coupons" element={<Coupons />} />
+          <Route path="discounts" element={<Discounts />} />
+        </Route>
+      </Routes>
+    </ErrorBoundary>
   )
 }

@@ -1,33 +1,33 @@
 import { useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
 import api from '../../api/axios'
 import ProductCard from '../../components/ProductCard'
 
 export default function Products() {
   const [products, setProducts] = useState([])
-  const [filters, setFilters] = useState({ name: '', brand: '', min_price: '', max_price: '', category: '' })
+  const [filters, setFilters] = useState({ name: '', brand: '', minPrice: '', maxPrice: '' })
   const [categories, setCategories] = useState([])
   const [page, setPage] = useState(1)
   const pageSize = 12
 
   const fetchProducts = () => {
     const params = new URLSearchParams()
-    params.set('page_size', pageSize)
-    params.set('page_index', page)
+    params.set('pageSize', pageSize)
+    params.set('page', page)
     if (filters.name) params.set('name', filters.name)
     if (filters.brand) params.set('brand', filters.brand)
-    if (filters.min_price) params.set('min_price', filters.min_price)
-    if (filters.max_price) params.set('max_price', filters.max_price)
-    if (filters.category) params.set('category', filters.category)
+    if (filters.minPrice) params.set('minPrice', filters.minPrice)
+    if (filters.maxPrice) params.set('maxPrice', filters.maxPrice)
 
     api.get(`/user/viewproducts?${params}`)
-      .then((res) => setProducts(res.data.products || []))
-      .catch(() => {})
+      .then((res) => setProducts(res.data.data || []))
+      .catch((err) => toast.error(err.response?.data?.message || 'Failed to load products'))
   }
 
   useEffect(() => {
     api.get('/admin/category/view')
-      .then((res) => setCategories(res.data.categories || []))
-      .catch(() => {})
+      .then((res) => setCategories(res.data.data || []))
+      .catch((err) => toast.error(err.response?.data?.message || 'Failed to load categories'))
   }, [])
 
   useEffect(() => { fetchProducts() }, [page])
@@ -58,27 +58,17 @@ export default function Products() {
         <input
           type="number"
           placeholder="Min price"
-          value={filters.min_price}
-          onChange={(e) => setFilters({ ...filters, min_price: e.target.value })}
+          value={filters.minPrice}
+          onChange={(e) => setFilters({ ...filters, minPrice: e.target.value })}
           className="border rounded px-3 py-2 w-28"
         />
         <input
           type="number"
           placeholder="Max price"
-          value={filters.max_price}
-          onChange={(e) => setFilters({ ...filters, max_price: e.target.value })}
+          value={filters.maxPrice}
+          onChange={(e) => setFilters({ ...filters, maxPrice: e.target.value })}
           className="border rounded px-3 py-2 w-28"
         />
-        <select
-          value={filters.category}
-          onChange={(e) => setFilters({ ...filters, category: e.target.value })}
-          className="border rounded px-3 py-2 w-40"
-        >
-          <option value="">All Categories</option>
-          {categories.map((c) => (
-            <option key={c._id} value={c.name}>{c.name}</option>
-          ))}
-        </select>
         <button className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded transition">
           Filter
         </button>
@@ -86,7 +76,7 @@ export default function Products() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {products.map((p) => (
-          <ProductCard key={p._id} product={p} />
+          <ProductCard key={p.id} product={p} />
         ))}
       </div>
 

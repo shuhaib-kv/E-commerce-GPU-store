@@ -6,7 +6,10 @@
       "Bash(tail:*)",
       "Bash(cd:*)",
       "Bash(go install:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(npm install:*)",
+      "Bash(go build:*)",
+      "Bash(npm run:*)"
     ]
   }
 }

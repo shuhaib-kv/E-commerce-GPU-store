@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast'
 import api from '../api/axios'
 import { useAuth } from '../context/AuthContext'
 
@@ -6,11 +7,11 @@ export default function ProductCard({ product, onAddToCart }) {
 
   const handleAddToCart = async () => {
     try {
-      await api.post('/cart/add', { product_id: product._id })
+      await api.post('/cart/add', { productid: product.id, quantity: 1 })
       if (onAddToCart) onAddToCart()
-      alert('Added to cart!')
+      toast.success('Added to cart!')
     } catch (err) {
-      alert(err.response?.data?.error || 'Failed to add to cart')
+      toast.error(err.response?.data?.message || 'Failed to add to cart')
     }
   }
 

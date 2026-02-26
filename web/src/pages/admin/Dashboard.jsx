@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
 import api from '../../api/axios'
 
 export default function Dashboard() {
@@ -6,16 +7,16 @@ export default function Dashboard() {
 
   useEffect(() => {
     Promise.all([
-      api.get('/admin/users').catch(() => ({ data: { users: [] } })),
-      api.get('/admin/product/view').catch(() => ({ data: { products: [] } })),
-      api.get('/admin/order/view').catch(() => ({ data: { orders: [] } })),
+      api.get('/admin/users').catch(() => ({ data: { total: 0 } })),
+      api.get('/admin/product/view').catch(() => ({ data: { totalItems: 0 } })),
+      api.get('/admin/order/view').catch(() => ({ data: { totalItems: 0 } })),
     ]).then(([users, products, orders]) => {
       setStats({
-        users: users.data.users?.length || 0,
-        products: products.data.products?.length || 0,
-        orders: orders.data.orders?.length || 0,
+        users: users.data.total || users.data.data?.length || 0,
+        products: products.data.totalItems || products.data.data?.length || 0,
+        orders: orders.data.totalItems || orders.data.data?.length || 0,
       })
-    })
+    }).catch(() => toast.error('Failed to load dashboard stats'))
   }, [])
 
   const cards = [

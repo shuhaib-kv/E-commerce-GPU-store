@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
 import api from '../../api/axios'
 
 export default function Categories() {
@@ -8,8 +9,8 @@ export default function Categories() {
 
   const fetchCategories = () => {
     api.get('/admin/category/view')
-      .then((res) => setCategories(res.data.categories || []))
-      .catch(() => {})
+      .then((res) => setCategories(res.data.data || []))
+      .catch((err) => toast.error(err.response?.data?.message || 'Failed to load categories'))
   }
 
   useEffect(() => { fetchCategories() }, [])
@@ -18,22 +19,29 @@ export default function Categories() {
     e.preventDefault()
     try {
       if (editing) {
-        await api.patch('/admin/category/edit', { category_id: editing, name })
+        await api.patch('/admin/category/edit', { id: editing, name })
+        toast.success('Category updated')
       } else {
         await api.post('/admin/category/add', { name })
+        toast.success('Category added')
       }
       setName('')
       setEditing(null)
       fetchCategories()
     } catch (err) {
-      alert(err.response?.data?.error || 'Failed to save category')
+      toast.error(err.response?.data?.message || 'Failed to save category')
     }
   }
 
   const deleteCategory = async (id) => {
     if (!confirm('Delete this category?')) return
-    await api.delete('/admin/category/delete', { data: { category_id: id } })
-    fetchCategories()
+    try {
+      await api.delete('/admin/category/delete', { data: { id } })
+      toast.success('Category deleted')
+      fetchCategories()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to delete category')
+    }
   }
 
   return (
@@ -60,11 +68,11 @@ export default function Categories() {
 
       <div className="bg-white rounded-lg shadow">
         {categories.map((c) => (
-          <div key={c._id} className="flex justify-between items-center px-4 py-3 border-b hover:bg-gray-50">
+          <div key={c.id} className="flex justify-between items-center px-4 py-3 border-b hover:bg-gray-50">
             <span className="font-medium">{c.name}</span>
             <div className="flex gap-3">
-              <button onClick={() => { setEditing(c._id); setName(c.name) }} className="text-blue-600 hover:underline text-sm">Edit</button>
-              <button onClick={() => deleteCategory(c._id)} className="text-red-600 hover:underline text-sm">Delete</button>
+              <button onClick={() => { setEditing(c.id); setName(c.name) }} className="text-blue-600 hover:underline text-sm">Edit</button>
+              <button onClick={() => deleteCategory(c.id)} className="text-red-600 hover:underline text-sm">Delete</button>
             </div>
           </div>
         ))}

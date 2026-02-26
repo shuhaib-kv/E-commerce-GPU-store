@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"ga/domain"
 	"ga/usecase"
+	"log"
 	"math"
 	"net/http"
 	"path/filepath"
@@ -25,13 +26,45 @@ func NewProductHandler(puc *usecase.ProductUsecase) *ProductHandler {
 
 func (h *ProductHandler) AdminAddProduct(c *gin.Context) {
 	name := c.PostForm("name")
-	price, _ := strconv.Atoi(c.PostForm("price"))
-	modelNo, _ := strconv.Atoi(c.PostForm("modelno"))
-	stock, _ := strconv.Atoi(c.PostForm("stock"))
+	if name == "" {
+		respondError(c, http.StatusBadRequest, "Product name is required")
+		return
+	}
+
+	price, err := strconv.Atoi(c.PostForm("price"))
+	if err != nil || price <= 0 {
+		respondError(c, http.StatusBadRequest, "Valid price is required")
+		return
+	}
+	modelNo, err := strconv.Atoi(c.PostForm("modelno"))
+	if err != nil {
+		respondError(c, http.StatusBadRequest, "Valid model number is required")
+		return
+	}
+	stock, err := strconv.Atoi(c.PostForm("stock"))
+	if err != nil || stock < 0 {
+		respondError(c, http.StatusBadRequest, "Valid stock is required")
+		return
+	}
+
 	categoryIDStr := c.PostForm("category_id")
+	categoryID, err := primitive.ObjectIDFromHex(categoryIDStr)
+	if err != nil {
+		respondError(c, http.StatusBadRequest, "Valid category ID is required")
+		return
+	}
+
 	description := c.PostForm("description")
 	brand := c.PostForm("brand")
 	discountIDStr := c.PostForm("discount_id")
+	var discountID primitive.ObjectID
+	if discountIDStr != "" {
+		discountID, err = primitive.ObjectIDFromHex(discountIDStr)
+		if err != nil {
+			respondError(c, http.StatusBadRequest, "Invalid discount ID")
+			return
+		}
+	}
 
 	// Handle images
 	img1 := saveUploadedFile(c, "image1")
@@ -43,13 +76,10 @@ func (h *ProductHandler) AdminAddProduct(c *gin.Context) {
 	specsStr := c.PostForm("specifications")
 	if specsStr != "" {
 		if err := json.Unmarshal([]byte(specsStr), &specs); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Invalid specifications JSON"})
+			respondError(c, http.StatusBadRequest, "Invalid specifications JSON")
 			return
 		}
 	}
-
-	categoryID, _ := primitive.ObjectIDFromHex(categoryIDStr)
-	discountID, _ := primitive.ObjectIDFromHex(discountIDStr)
 
 	product := &domain.Product{
 		Name:           name,
@@ -67,22 +97,22 @@ func (h *ProductHandler) AdminAddProduct(c *gin.Context) {
 	}
 
 	if err := h.productUC.AddProduct(c.Request.Context(), product); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": err.Error()})
+		respondInternalError(c, err, "AdminAddProduct")
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"status": true, "message": "Product added"})
+	respondSuccess(c, http.StatusOK, "Product added", nil)
 }
 
 func (h *ProductHandler) EditProduct(c *gin.Context) {
 	id, err := primitive.ObjectIDFromHex(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Invalid product ID"})
+		respondError(c, http.StatusBadRequest, "Invalid product ID")
 		return
 	}
 
 	var body map[string]interface{}
 	if err := c.ShouldBindJSON(&body); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": err.Error()})
+		respondError(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -99,10 +129,10 @@ func (h *ProductHandler) EditProduct(c *gin.Context) {
 	}
 
 	if err := h.productUC.EditProduct(c.Request.Context(), id, body); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": err.Error()})
+		respondError(c, http.StatusBadRequest, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"status": true, "message": "Product updated"})
+	respondSuccess(c, http.StatusOK, "Product updated", nil)
 }
 
 func (h *ProductHandler) ViewProducts(c *gin.Context) {
@@ -111,7 +141,7 @@ func (h *ProductHandler) ViewProducts(c *gin.Context) {
 
 	products, total, err := h.productUC.ViewProducts(c.Request.Context(), filter)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": false, "message": err.Error()})
+		respondInternalError(c, err, "ViewProducts")
 		return
 	}
 
@@ -145,14 +175,14 @@ func (h *ProductHandler) ViewProducts(c *gin.Context) {
 func (h *ProductHandler) DeleteProduct(c *gin.Context) {
 	id, err := primitive.ObjectIDFromHex(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Invalid product ID"})
+		respondError(c, http.StatusBadRequest, "Invalid product ID")
 		return
 	}
 	if err := h.productUC.DeleteProduct(c.Request.Context(), id); err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"status": false, "message": err.Error()})
+		respondError(c, http.StatusNotFound, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"status": true, "message": "Product deleted"})
+	respondSuccess(c, http.StatusOK, "Product deleted", nil)
 }
 
 func (h *ProductHandler) ViewProductsUser(c *gin.Context) {
@@ -184,7 +214,7 @@ func (h *ProductHandler) ViewProductsUser(c *gin.Context) {
 
 	response, total, err := h.productUC.ViewProductsUser(c.Request.Context(), filter, page, pageSize)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": false, "message": err.Error()})
+		respondInternalError(c, err, "ViewProductsUser")
 		return
 	}
 
@@ -197,7 +227,7 @@ func (h *ProductHandler) ViewProductsUser(c *gin.Context) {
 func (h *ProductHandler) AddAttributeDefinition(c *gin.Context) {
 	categoryID, err := primitive.ObjectIDFromHex(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Invalid category ID"})
+		respondError(c, http.StatusBadRequest, "Invalid category ID")
 		return
 	}
 
@@ -209,13 +239,13 @@ func (h *ProductHandler) AddAttributeDefinition(c *gin.Context) {
 		Options       []string `json:"options"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": err.Error()})
+		respondError(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	validTypes := map[string]bool{"string": true, "number": true, "enum": true}
 	if !validTypes[body.AttributeType] {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "attribute_type must be 'string', 'number', or 'enum'"})
+		respondError(c, http.StatusBadRequest, "attribute_type must be 'string', 'number', or 'enum'")
 		return
 	}
 
@@ -229,37 +259,37 @@ func (h *ProductHandler) AddAttributeDefinition(c *gin.Context) {
 	}
 
 	if err := h.productUC.AddAttributeDefinition(c.Request.Context(), attr); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": err.Error()})
+		respondError(c, http.StatusBadRequest, err.Error())
 		return
 	}
-	c.JSON(http.StatusCreated, gin.H{"status": true, "message": "Attribute definition created", "data": attr})
+	respondSuccess(c, http.StatusCreated, "Attribute definition created", attr)
 }
 
 func (h *ProductHandler) ListAttributeDefinitions(c *gin.Context) {
 	categoryID, err := primitive.ObjectIDFromHex(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Invalid category ID"})
+		respondError(c, http.StatusBadRequest, "Invalid category ID")
 		return
 	}
 	attrs, err := h.productUC.ListAttributeDefinitions(c.Request.Context(), categoryID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": false, "message": err.Error()})
+		respondInternalError(c, err, "ListAttributeDefinitions")
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"status": true, "data": attrs})
+	respondSuccess(c, http.StatusOK, "", attrs)
 }
 
 func (h *ProductHandler) DeleteAttributeDefinition(c *gin.Context) {
 	id, err := primitive.ObjectIDFromHex(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Invalid ID"})
+		respondError(c, http.StatusBadRequest, "Invalid ID")
 		return
 	}
 	if err := h.productUC.DeleteAttributeDefinition(c.Request.Context(), id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": false, "message": err.Error()})
+		respondInternalError(c, err, "DeleteAttributeDefinition")
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"status": true, "message": "Attribute definition deleted"})
+	respondSuccess(c, http.StatusOK, "Attribute definition deleted", nil)
 }
 
 func saveUploadedFile(c *gin.Context, key string) string {
@@ -269,6 +299,9 @@ func saveUploadedFile(c *gin.Context, key string) string {
 	}
 	ext := filepath.Ext(file.Filename)
 	filename := uuid.New().String() + ext
-	c.SaveUploadedFile(file, "./public/images/"+filename)
+	if err := c.SaveUploadedFile(file, "./public/images/"+filename); err != nil {
+		log.Println("saveUploadedFile error:", err)
+		return ""
+	}
 	return filename
 }

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import toast from 'react-hot-toast'
 import api from '../../api/axios'
 import { useAuth } from '../../context/AuthContext'
 
@@ -18,10 +19,11 @@ export default function Signup() {
     setError('')
     try {
       const res = await api.post('/user/signup', form)
-      loginUser(res.data.user || { email: form.email })
+      toast.success('Account created successfully')
+      loginUser({ email: form.email, first_name: form.first_name })
       navigate('/')
     } catch (err) {
-      setError(err.response?.data?.error || 'Signup failed')
+      setError(err.response?.data?.message || 'Signup failed')
     }
   }
 

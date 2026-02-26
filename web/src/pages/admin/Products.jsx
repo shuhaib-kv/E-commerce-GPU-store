@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
 import api from '../../api/axios'
 
 export default function AdminProducts() {
@@ -7,21 +8,21 @@ export default function AdminProducts() {
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState({
-    name: '', price: '', model_no: '', stock: '', category_id: '', description: '', brand: '',
+    name: '', price: '', modelno: '', stock: '', category_id: '', description: '', brand: '',
   })
   const [images, setImages] = useState({ image1: null, image2: null, image3: null })
 
   const fetchProducts = () => {
     api.get('/admin/product/view')
-      .then((res) => setProducts(res.data.products || []))
-      .catch(() => {})
+      .then((res) => setProducts(res.data.data || []))
+      .catch((err) => toast.error(err.response?.data?.message || 'Failed to load products'))
   }
 
   useEffect(() => {
     fetchProducts()
     api.get('/admin/category/view')
-      .then((res) => setCategories(res.data.categories || []))
-      .catch(() => {})
+      .then((res) => setCategories(res.data.data || []))
+      .catch((err) => toast.error(err.response?.data?.message || 'Failed to load categories'))
   }, [])
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
@@ -37,28 +38,35 @@ export default function AdminProducts() {
     try {
       if (editing) {
         await api.patch(`/admin/product/edit/${editing}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+        toast.success('Product updated')
       } else {
         await api.post('/admin/product/add', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+        toast.success('Product added')
       }
       setShowForm(false)
       setEditing(null)
-      setForm({ name: '', price: '', model_no: '', stock: '', category_id: '', description: '', brand: '' })
+      setForm({ name: '', price: '', modelno: '', stock: '', category_id: '', description: '', brand: '' })
       setImages({ image1: null, image2: null, image3: null })
       fetchProducts()
     } catch (err) {
-      alert(err.response?.data?.error || 'Failed to save product')
+      toast.error(err.response?.data?.message || 'Failed to save product')
     }
   }
 
   const deleteProduct = async (id) => {
     if (!confirm('Delete this product?')) return
-    await api.delete(`/admin/product/delete/${id}`)
-    fetchProducts()
+    try {
+      await api.delete(`/admin/product/delete/${id}`)
+      toast.success('Product deleted')
+      fetchProducts()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to delete product')
+    }
   }
 
   const startEdit = (p) => {
-    setForm({ name: p.name, price: p.price, model_no: p.model_no, stock: p.stock, category_id: p.category_id, description: p.description, brand: p.brand })
-    setEditing(p._id)
+    setForm({ name: p.name, price: p.price, modelno: p.modelno, stock: p.stock, category_id: p.category_id, description: p.description, brand: p.brand })
+    setEditing(p.id)
     setShowForm(true)
   }
 
@@ -76,11 +84,11 @@ export default function AdminProducts() {
           <input name="name" placeholder="Product Name" value={form.name} onChange={handleChange} className="border rounded px-3 py-2" required />
           <input name="brand" placeholder="Brand" value={form.brand} onChange={handleChange} className="border rounded px-3 py-2" required />
           <input name="price" type="number" placeholder="Price" value={form.price} onChange={handleChange} className="border rounded px-3 py-2" required />
-          <input name="model_no" type="number" placeholder="Model No" value={form.model_no} onChange={handleChange} className="border rounded px-3 py-2" required />
+          <input name="modelno" type="number" placeholder="Model No" value={form.modelno} onChange={handleChange} className="border rounded px-3 py-2" required />
           <input name="stock" type="number" placeholder="Stock" value={form.stock} onChange={handleChange} className="border rounded px-3 py-2" required />
           <select name="category_id" value={form.category_id} onChange={handleChange} className="border rounded px-3 py-2" required>
             <option value="">Select Category</option>
-            {categories.map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}
+            {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
           <textarea name="description" placeholder="Description" value={form.description} onChange={handleChange} className="border rounded px-3 py-2 md:col-span-2" rows={3} />
           <div>
@@ -114,14 +122,14 @@ export default function AdminProducts() {
           </thead>
           <tbody>
             {products.map((p) => (
-              <tr key={p._id} className="border-b hover:bg-gray-50">
+              <tr key={p.id} className="border-b hover:bg-gray-50">
                 <td className="px-4 py-3">{p.name}</td>
                 <td className="px-4 py-3">{p.brand}</td>
                 <td className="px-4 py-3">₹{p.price}</td>
                 <td className="px-4 py-3">{p.stock}</td>
                 <td className="px-4 py-3 flex gap-2">
                   <button onClick={() => startEdit(p)} className="text-blue-600 hover:underline text-sm">Edit</button>
-                  <button onClick={() => deleteProduct(p._id)} className="text-red-600 hover:underline text-sm">Delete</button>
+                  <button onClick={() => deleteProduct(p.id)} className="text-red-600 hover:underline text-sm">Delete</button>
                 </td>
               </tr>
             ))}

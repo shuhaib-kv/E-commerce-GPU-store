@@ -30,7 +30,7 @@ func (h *UserHandler) Signup(c *gin.Context) {
 		Phone     string `json:"phone" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": err.Error()})
+		respondError(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -44,11 +44,11 @@ func (h *UserHandler) Signup(c *gin.Context) {
 	}
 
 	if err := h.userUC.Signup(c.Request.Context(), user); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": err.Error()})
+		respondError(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"status": true, "message": "Account Created", "data": "welcome to Store"})
+	respondSuccess(c, http.StatusCreated, "Account Created", "welcome to Store")
 }
 
 func (h *UserHandler) Login(c *gin.Context) {
@@ -57,24 +57,24 @@ func (h *UserHandler) Login(c *gin.Context) {
 		Password string `json:"password" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": err.Error()})
+		respondError(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	user, err := h.userUC.Login(c.Request.Context(), body.Email, body.Password)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"status": false, "message": err.Error()})
+		respondError(c, http.StatusUnauthorized, err.Error())
 		return
 	}
 
 	token, err := middleware.GenerateJWT(user.Email, user.ID.Hex(), h.cfg.JWTSecret)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": false, "message": "Failed to generate token"})
+		respondInternalError(c, err, "UserLogin.GenerateJWT")
 		return
 	}
 
 	c.SetCookie("UserAuth", token, 3600, "/", "", false, true)
-	c.JSON(http.StatusOK, gin.H{"status": true, "message": "Login successful"})
+	respondSuccess(c, http.StatusOK, "Login successful", nil)
 }
 
 func (h *UserHandler) Home(c *gin.Context) {
@@ -85,7 +85,7 @@ func (h *UserHandler) Home(c *gin.Context) {
 func (h *UserHandler) AddAddress(c *gin.Context) {
 	userID, err := primitive.ObjectIDFromHex(c.GetString("user_id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Invalid user"})
+		respondError(c, http.StatusBadRequest, "Invalid user")
 		return
 	}
 
@@ -99,7 +99,7 @@ func (h *UserHandler) AddAddress(c *gin.Context) {
 		City        string `json:"city" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": err.Error()})
+		respondError(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -115,42 +115,42 @@ func (h *UserHandler) AddAddress(c *gin.Context) {
 	}
 
 	if err := h.userUC.AddAddress(c.Request.Context(), addr); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": false, "message": err.Error()})
+		respondInternalError(c, err, "AddAddress")
 		return
 	}
-	c.JSON(http.StatusCreated, gin.H{"status": true, "message": "Address added"})
+	respondSuccess(c, http.StatusCreated, "Address added", nil)
 }
 
 func (h *UserHandler) ShowAddress(c *gin.Context) {
 	userID, err := primitive.ObjectIDFromHex(c.GetString("user_id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Invalid user"})
+		respondError(c, http.StatusBadRequest, "Invalid user")
 		return
 	}
 	addr, err := h.userUC.GetAddress(c.Request.Context(), userID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"status": false, "message": "Address not found"})
+		respondError(c, http.StatusNotFound, "Address not found")
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"status": true, "data": addr})
+	respondSuccess(c, http.StatusOK, "", addr)
 }
 
 func (h *UserHandler) EditAddress(c *gin.Context) {
 	userID, err := primitive.ObjectIDFromHex(c.GetString("user_id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Invalid user"})
+		respondError(c, http.StatusBadRequest, "Invalid user")
 		return
 	}
 	var body map[string]interface{}
 	if err := c.ShouldBindJSON(&body); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": err.Error()})
+		respondError(c, http.StatusBadRequest, err.Error())
 		return
 	}
 	if err := h.userUC.EditAddress(c.Request.Context(), userID, body); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": false, "message": err.Error()})
+		respondInternalError(c, err, "EditAddress")
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"status": true, "message": "Address updated"})
+	respondSuccess(c, http.StatusOK, "Address updated", nil)
 }
 
 // Admin user management handlers
@@ -170,7 +170,7 @@ func (h *UserHandler) ViewUsers(c *gin.Context) {
 
 	users, total, err := h.userUC.ListUsers(c.Request.Context(), filter, page, pageSize)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": false, "message": err.Error()})
+		respondInternalError(c, err, "ViewUsers")
 		return
 	}
 
@@ -190,19 +190,19 @@ func (h *UserHandler) BlockUser(c *gin.Context) {
 		ID string `json:"id" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": err.Error()})
+		respondError(c, http.StatusBadRequest, err.Error())
 		return
 	}
 	id, err := primitive.ObjectIDFromHex(body.ID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Invalid ID"})
+		respondError(c, http.StatusBadRequest, "Invalid ID")
 		return
 	}
 	if err := h.userUC.BlockUser(c.Request.Context(), id); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": err.Error()})
+		respondError(c, http.StatusBadRequest, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"status": true, "message": "User blocked"})
+	respondSuccess(c, http.StatusOK, "User blocked", nil)
 }
 
 func (h *UserHandler) UnblockUser(c *gin.Context) {
@@ -210,19 +210,19 @@ func (h *UserHandler) UnblockUser(c *gin.Context) {
 		ID string `json:"id" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": err.Error()})
+		respondError(c, http.StatusBadRequest, err.Error())
 		return
 	}
 	id, err := primitive.ObjectIDFromHex(body.ID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Invalid ID"})
+		respondError(c, http.StatusBadRequest, "Invalid ID")
 		return
 	}
 	if err := h.userUC.UnblockUser(c.Request.Context(), id); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": err.Error()})
+		respondError(c, http.StatusBadRequest, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"status": true, "message": "User unblocked"})
+	respondSuccess(c, http.StatusOK, "User unblocked", nil)
 }
 
 func (h *UserHandler) DeleteUser(c *gin.Context) {
@@ -230,17 +230,17 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 		ID string `json:"id" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": err.Error()})
+		respondError(c, http.StatusBadRequest, err.Error())
 		return
 	}
 	id, err := primitive.ObjectIDFromHex(body.ID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": "Invalid ID"})
+		respondError(c, http.StatusBadRequest, "Invalid ID")
 		return
 	}
 	if err := h.userUC.DeleteUser(c.Request.Context(), id); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": false, "message": err.Error()})
+		respondError(c, http.StatusBadRequest, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"status": true, "message": "User deleted"})
+	respondSuccess(c, http.StatusOK, "User deleted", nil)
 }

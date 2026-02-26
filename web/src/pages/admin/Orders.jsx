@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
 import api from '../../api/axios'
 
 export default function AdminOrders() {
@@ -6,18 +7,19 @@ export default function AdminOrders() {
 
   const fetchOrders = () => {
     api.get('/admin/order/view')
-      .then((res) => setOrders(res.data.orders || []))
-      .catch(() => {})
+      .then((res) => setOrders(res.data.data || []))
+      .catch((err) => toast.error(err.response?.data?.message || 'Failed to load orders'))
   }
 
   useEffect(() => { fetchOrders() }, [])
 
   const updateOrder = async (orderId, field, value) => {
     try {
-      await api.patch('/admin/order/view', { order_id: orderId, [field]: value })
+      await api.patch('/admin/order/view', { orderid: orderId, [field]: value })
+      toast.success('Order updated')
       fetchOrders()
     } catch (err) {
-      alert(err.response?.data?.error || 'Update failed')
+      toast.error(err.response?.data?.message || 'Update failed')
     }
   }
 
@@ -38,7 +40,7 @@ export default function AdminOrders() {
           </thead>
           <tbody>
             {orders.map((o) => (
-              <tr key={o._id} className="border-b hover:bg-gray-50">
+              <tr key={o.id} className="border-b hover:bg-gray-50">
                 <td className="px-4 py-3 font-mono text-sm">{o.order_id?.slice(0, 8)}</td>
                 <td className="px-4 py-3">₹{o.total_amount}</td>
                 <td className="px-4 py-3">{o.payment_method}</td>
@@ -54,12 +56,12 @@ export default function AdminOrders() {
                 </td>
                 <td className="px-4 py-3 flex gap-2">
                   {!o.status && (
-                    <button onClick={() => updateOrder(o.order_id, 'status', true)} className="text-green-600 hover:underline text-sm">
+                    <button onClick={() => updateOrder(o.order_id, 'status', 'true')} className="text-green-600 hover:underline text-sm">
                       Mark Delivered
                     </button>
                   )}
                   {!o.payment_status && (
-                    <button onClick={() => updateOrder(o.order_id, 'payment_status', true)} className="text-blue-600 hover:underline text-sm">
+                    <button onClick={() => updateOrder(o.order_id, 'paymentstatus', 'true')} className="text-blue-600 hover:underline text-sm">
                       Mark Paid
                     </button>
                   )}
