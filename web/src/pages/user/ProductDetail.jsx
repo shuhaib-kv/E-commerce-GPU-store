@@ -172,12 +172,12 @@ export default function ProductDetail() {
 
           <div className="mt-6 flex items-baseline gap-3">
             <span className="text-green-600 font-bold text-3xl">
-              ₹{product.price.toLocaleString()}
+              ₹{(product.price || 0).toLocaleString()}
             </span>
             {product.discount_amount > 0 && (
               <>
                 <span className="text-gray-400 line-through text-lg">
-                  ₹{product.original_price.toLocaleString()}
+                  ₹{(product.original_price || 0).toLocaleString()}
                 </span>
                 <span className="bg-red-100 text-red-600 text-sm font-semibold px-2 py-0.5 rounded">
                   -{product.discount_percentage}%
