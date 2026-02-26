@@ -16,10 +16,13 @@ api.interceptors.response.use(
     }
 
     if (err.response.status === 401) {
-      localStorage.removeItem('user')
-      localStorage.removeItem('admin')
-      if (!window.location.pathname.includes('/login')) {
-        window.location.href = '/login'
+      const isLoggedIn = localStorage.getItem('user') || localStorage.getItem('admin')
+      if (isLoggedIn) {
+        localStorage.removeItem('user')
+        localStorage.removeItem('admin')
+        if (!window.location.pathname.includes('/login')) {
+          window.location.href = '/login'
+        }
       }
     } else if (err.response.status >= 500) {
       toast.error('Server error. Please try again later.')

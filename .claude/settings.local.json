@@ -9,7 +9,8 @@
       "Bash(curl:*)",
       "Bash(npm install:*)",
       "Bash(go build:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(go run:*)"
     ]
   }
 }

@@ -128,8 +128,8 @@ func (h *UserHandler) ShowAddress(c *gin.Context) {
 		return
 	}
 	addr, err := h.userUC.GetAddress(c.Request.Context(), userID)
-	if err != nil {
-		respondError(c, http.StatusNotFound, "Address not found")
+	if err != nil || addr == nil {
+		c.JSON(http.StatusOK, gin.H{"status": true, "data": nil})
 		return
 	}
 	respondSuccess(c, http.StatusOK, "", addr)

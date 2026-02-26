@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"ga/domain"
 	"ga/usecase"
 	"net/http"
 
@@ -25,13 +26,26 @@ func (h *WalletHandler) WalletInfo(c *gin.Context) {
 
 	wallet, history, err := h.walletUC.GetWalletInfo(c.Request.Context(), userID)
 	if err != nil {
-		respondInternalError(c, err, "WalletInfo")
+		// No wallet yet — return zero balance
+		c.JSON(http.StatusOK, gin.H{
+			"status":  true,
+			"balance": 0,
+			"history": []interface{}{},
+		})
 		return
+	}
+
+	balance := uint(0)
+	if wallet != nil {
+		balance = wallet.Balance
+	}
+	if history == nil {
+		history = []domain.WalletHistory{}
 	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"status":  true,
-		"balance": wallet.Balance,
+		"balance": balance,
 		"history": history,
 	})
 }

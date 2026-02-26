@@ -28,11 +28,14 @@ func Setup(
 	r.POST("/user/signup", userH.Signup)
 	r.POST("/user/login", userH.Login)
 
+	// Public routes (no auth required)
+	r.GET("/user/viewproducts", productH.ViewProductsUser)
+	r.GET("/categories", categoryH.ViewCategory)
+
 	// User protected routes
 	user := r.Group("/user", userAuth)
 	{
 		user.GET("/home", userH.Home)
-		user.GET("/viewproducts", productH.ViewProductsUser)
 		user.POST("/add/address", userH.AddAddress)
 		user.PATCH("/edit/address", userH.EditAddress)
 		user.GET("/address", userH.ShowAddress)
