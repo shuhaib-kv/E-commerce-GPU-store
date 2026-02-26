@@ -55,12 +55,19 @@ func (h *AdminHandler) Login(c *gin.Context) {
 		return
 	}
 
-	token, err := middleware.GenerateJWT(admin.Email, admin.ID.Hex(), h.cfg.JWTSecret)
+	token, err := middleware.GenerateJWT(admin.Email, admin.ID.Hex(), "admin", h.cfg.JWTSecret)
 	if err != nil {
 		respondInternalError(c, err, "AdminLogin.GenerateJWT")
 		return
 	}
 
-	c.SetCookie("Adminjwt", token, 3600, "/", "", false, true)
+	c.SetSameSite(http.SameSiteStrictMode)
+	c.SetCookie("Adminjwt", token, 86400, "/", "", false, true)
 	respondSuccess(c, http.StatusOK, "Login successful", nil)
+}
+
+func (h *AdminHandler) Logout(c *gin.Context) {
+	c.SetSameSite(http.SameSiteStrictMode)
+	c.SetCookie("Adminjwt", "", -1, "/", "", false, true)
+	respondSuccess(c, http.StatusOK, "Logged out", nil)
 }

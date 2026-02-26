@@ -28,6 +28,7 @@ func Setup(
 	// User auth (no middleware)
 	r.POST("/user/signup", userH.Signup)
 	r.POST("/user/login", userH.Login)
+	r.POST("/user/logout", userH.Logout)
 
 	// Public routes (no auth required)
 	r.GET("/user/viewproducts", productH.ViewProductsUser)
@@ -61,7 +62,8 @@ func Setup(
 
 	// Admin auth (no middleware)
 	r.POST("/admin", adminH.Login)
-	r.POST("/admin/signup", adminH.Signup)
+	r.POST("/admin/logout", adminH.Logout)
+	r.POST("/admin/signup", adminAuth, adminH.Signup)
 
 	// Admin protected routes
 	admin := r.Group("/admin", adminAuth)

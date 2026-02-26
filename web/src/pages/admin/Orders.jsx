@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
+import { ShoppingCart, CheckCircle2, CreditCard } from 'lucide-react'
 import api from '../../api/axios'
 
 export default function AdminOrders() {
@@ -25,52 +26,75 @@ export default function AdminOrders() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-6">Order Management</h1>
-      <div className="bg-white rounded-lg shadow overflow-x-auto">
-        <table className="w-full text-left">
-          <thead className="bg-gray-50 border-b">
-            <tr>
-              <th className="px-4 py-3">Order ID</th>
-              <th className="px-4 py-3">Amount</th>
-              <th className="px-4 py-3">Payment</th>
-              <th className="px-4 py-3">Delivery</th>
-              <th className="px-4 py-3">Payment Status</th>
-              <th className="px-4 py-3">Actions</th>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+          <ShoppingCart size={24} className="text-purple-600" />
+          Order Management
+        </h1>
+        <p className="text-gray-500 text-sm mt-1">{orders.length} total orders</p>
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left text-gray-500 text-xs uppercase tracking-wider bg-gray-50/80">
+              <th className="px-5 py-3.5 font-medium">Order ID</th>
+              <th className="px-5 py-3.5 font-medium">Amount</th>
+              <th className="px-5 py-3.5 font-medium">Payment</th>
+              <th className="px-5 py-3.5 font-medium">Delivery</th>
+              <th className="px-5 py-3.5 font-medium">Payment Status</th>
+              <th className="px-5 py-3.5 font-medium text-right">Actions</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-gray-100">
             {orders.map((o) => (
-              <tr key={o.id} className="border-b hover:bg-gray-50">
-                <td className="px-4 py-3 font-mono text-sm">{o.order_id?.slice(0, 8)}</td>
-                <td className="px-4 py-3">₹{o.total_amount}</td>
-                <td className="px-4 py-3">{o.payment_method}</td>
-                <td className="px-4 py-3">
-                  <span className={`px-2 py-1 rounded text-xs ${o.status ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+              <tr key={o.id} className="hover:bg-gray-50/50 transition">
+                <td className="px-5 py-3.5 font-mono text-xs text-gray-600">{o.order_id}</td>
+                <td className="px-5 py-3.5 font-semibold text-gray-900">₹{(o.total_amount || 0).toLocaleString()}</td>
+                <td className="px-5 py-3.5">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-gray-100 text-gray-700 capitalize">
+                    {o.payment_method}
+                  </span>
+                </td>
+                <td className="px-5 py-3.5">
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    o.status ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'
+                  }`}>
                     {o.status ? 'Delivered' : 'Pending'}
                   </span>
                 </td>
-                <td className="px-4 py-3">
-                  <span className={`px-2 py-1 rounded text-xs ${o.payment_status ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                <td className="px-5 py-3.5">
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    o.payment_status ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+                  }`}>
                     {o.payment_status ? 'Paid' : 'Unpaid'}
                   </span>
                 </td>
-                <td className="px-4 py-3 flex gap-2">
-                  {!o.status && (
-                    <button onClick={() => updateOrder(o.order_id, 'status', 'true')} className="text-green-600 hover:underline text-sm">
-                      Mark Delivered
-                    </button>
-                  )}
-                  {!o.payment_status && (
-                    <button onClick={() => updateOrder(o.order_id, 'paymentstatus', 'true')} className="text-blue-600 hover:underline text-sm">
-                      Mark Paid
-                    </button>
-                  )}
+                <td className="px-5 py-3.5">
+                  <div className="flex items-center justify-end gap-1">
+                    {!o.status && (
+                      <button
+                        onClick={() => updateOrder(o.order_id, 'status', 'true')}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-green-50 text-green-700 hover:bg-green-100 transition"
+                      >
+                        <CheckCircle2 size={14} /> Deliver
+                      </button>
+                    )}
+                    {!o.payment_status && (
+                      <button
+                        onClick={() => updateOrder(o.order_id, 'paymentstatus', 'true')}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 transition"
+                      >
+                        <CreditCard size={14} /> Paid
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-        {orders.length === 0 && <p className="text-center text-gray-500 py-8">No orders found.</p>}
+        {orders.length === 0 && <p className="text-center text-gray-400 py-10">No orders found.</p>}
       </div>
     </div>
   )

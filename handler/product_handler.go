@@ -110,25 +110,73 @@ func (h *ProductHandler) EditProduct(c *gin.Context) {
 		return
 	}
 
-	var body map[string]interface{}
-	if err := c.ShouldBindJSON(&body); err != nil {
-		respondError(c, http.StatusBadRequest, err.Error())
-		return
+	contentType := c.ContentType()
+	update := bson.M{}
+
+	if contentType == "application/json" {
+		var body map[string]interface{}
+		if err := c.ShouldBindJSON(&body); err != nil {
+			respondError(c, http.StatusBadRequest, err.Error())
+			return
+		}
+		for k, v := range body {
+			update[k] = v
+		}
+	} else {
+		// multipart/form-data — parse text fields
+		if v := c.PostForm("name"); v != "" {
+			update["name"] = v
+		}
+		if v := c.PostForm("brand"); v != "" {
+			update["brand"] = v
+		}
+		if v := c.PostForm("description"); v != "" {
+			update["description"] = v
+		}
+		if v, err := strconv.Atoi(c.PostForm("price")); err == nil && v > 0 {
+			update["price"] = uint(v)
+		}
+		if v, err := strconv.Atoi(c.PostForm("modelno")); err == nil {
+			update["model_no"] = uint(v)
+		}
+		if v, err := strconv.Atoi(c.PostForm("stock")); err == nil {
+			update["stock"] = uint(v)
+		}
+		if v := c.PostForm("category_id"); v != "" {
+			if oid, err := primitive.ObjectIDFromHex(v); err == nil {
+				update["category_id"] = oid
+			}
+		}
+		if v := c.PostForm("discount_id"); v != "" {
+			if oid, err := primitive.ObjectIDFromHex(v); err == nil {
+				update["discount_id"] = oid
+			}
+		}
+		// Handle image uploads
+		if img := saveUploadedFile(c, "image1"); img != "" {
+			update["image1"] = img
+		}
+		if img := saveUploadedFile(c, "image2"); img != "" {
+			update["image2"] = img
+		}
+		if img := saveUploadedFile(c, "image3"); img != "" {
+			update["image3"] = img
+		}
 	}
 
-	// Convert category_id and discount_id strings to ObjectID if present
-	if catID, ok := body["category_id"].(string); ok {
+	// Convert category_id and discount_id strings to ObjectID (for JSON path)
+	if catID, ok := update["category_id"].(string); ok {
 		if oid, err := primitive.ObjectIDFromHex(catID); err == nil {
-			body["category_id"] = oid
+			update["category_id"] = oid
 		}
 	}
-	if disID, ok := body["discount_id"].(string); ok {
+	if disID, ok := update["discount_id"].(string); ok {
 		if oid, err := primitive.ObjectIDFromHex(disID); err == nil {
-			body["discount_id"] = oid
+			update["discount_id"] = oid
 		}
 	}
 
-	if err := h.productUC.EditProduct(c.Request.Context(), id, body); err != nil {
+	if err := h.productUC.EditProduct(c.Request.Context(), id, update); err != nil {
 		respondError(c, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -162,6 +210,8 @@ func (h *ProductHandler) ViewProducts(c *gin.Context) {
 			"image1": p.Image1, "image2": p.Image2, "image3": p.Image3,
 			"brand": p.Brand, "discount_id": p.DiscountID,
 			"specifications": p.Specifications,
+			"stock": p.Stock, "model_no": p.ModelNo,
+			"category_id": p.CategoryID, "description": p.Description,
 		})
 	}
 

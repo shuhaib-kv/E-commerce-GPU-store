@@ -10,6 +10,8 @@ export default defineConfig({
       '/user': 'http://localhost:8080',
       '/admin': 'http://localhost:8080',
       '/cart': 'http://localhost:8080',
+      '/categories': 'http://localhost:8080',
+      '/reviews': 'http://localhost:8080',
       '/razorpay': 'http://localhost:8080',
       '/payment-success': 'http://localhost:8080',
       '/success': 'http://localhost:8080',

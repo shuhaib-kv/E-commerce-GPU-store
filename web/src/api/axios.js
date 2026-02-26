@@ -16,12 +16,15 @@ api.interceptors.response.use(
     }
 
     if (err.response.status === 401) {
-      const isLoggedIn = localStorage.getItem('user') || localStorage.getItem('admin')
-      if (isLoggedIn) {
+      const isAdmin = localStorage.getItem('admin')
+      const isUser = localStorage.getItem('user')
+      if (isAdmin || isUser) {
         localStorage.removeItem('user')
         localStorage.removeItem('admin')
         if (!window.location.pathname.includes('/login')) {
-          window.location.href = '/login'
+          window.location.href = isAdmin && window.location.pathname.startsWith('/admin')
+            ? '/admin/login'
+            : '/login'
         }
       }
     } else if (err.response.status >= 500) {

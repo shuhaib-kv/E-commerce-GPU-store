@@ -67,14 +67,25 @@ func (h *UserHandler) Login(c *gin.Context) {
 		return
 	}
 
-	token, err := middleware.GenerateJWT(user.Email, user.ID.Hex(), h.cfg.JWTSecret)
+	token, err := middleware.GenerateJWT(user.Email, user.ID.Hex(), "user", h.cfg.JWTSecret)
 	if err != nil {
 		respondInternalError(c, err, "UserLogin.GenerateJWT")
 		return
 	}
 
-	c.SetCookie("UserAuth", token, 3600, "/", "", false, true)
-	respondSuccess(c, http.StatusOK, "Login successful", nil)
+	c.SetSameSite(http.SameSiteStrictMode)
+	c.SetCookie("UserAuth", token, 86400, "/", "", false, true)
+	respondSuccess(c, http.StatusOK, "Login successful", gin.H{
+		"id":        user.ID,
+		"email":     user.Email,
+		"user_name": user.UserName,
+	})
+}
+
+func (h *UserHandler) Logout(c *gin.Context) {
+	c.SetSameSite(http.SameSiteStrictMode)
+	c.SetCookie("UserAuth", "", -1, "/", "", false, true)
+	respondSuccess(c, http.StatusOK, "Logged out", nil)
 }
 
 func (h *UserHandler) Home(c *gin.Context) {

@@ -1,4 +1,5 @@
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useState, useCallback } from 'react'
+import api from '../api/axios'
 
 const AuthContext = createContext()
 
@@ -19,18 +20,20 @@ export function AuthProvider({ children }) {
     setUser(userData)
     localStorage.setItem('user', JSON.stringify(userData))
   }
-  const logoutUser = () => {
+  const logoutUser = useCallback(() => {
+    api.post('/user/logout').catch(() => {})
     setUser(null)
     localStorage.removeItem('user')
-  }
+  }, [])
   const loginAdmin = (adminData) => {
     setAdmin(adminData)
     localStorage.setItem('admin', JSON.stringify(adminData))
   }
-  const logoutAdmin = () => {
+  const logoutAdmin = useCallback(() => {
+    api.post('/admin/logout').catch(() => {})
     setAdmin(null)
     localStorage.removeItem('admin')
-  }
+  }, [])
 
   return (
     <AuthContext.Provider value={{ user, admin, loginUser, logoutUser, loginAdmin, logoutAdmin }}>

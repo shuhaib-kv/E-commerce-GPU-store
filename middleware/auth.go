@@ -11,15 +11,19 @@ import (
 type JWTClaim struct {
 	Email string `json:"email"`
 	ID    string `json:"id"`
+	Role  string `json:"role"`
 	jwt.RegisteredClaims
 }
 
-func GenerateJWT(email, id, secret string) (string, error) {
+func GenerateJWT(email, id, role, secret string) (string, error) {
+	now := time.Now()
 	claims := &JWTClaim{
 		Email: email,
 		ID:    id,
+		Role:  role,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
+			IssuedAt:  jwt.NewNumericDate(now),
+			ExpiresAt: jwt.NewNumericDate(now.Add(24 * time.Hour)),
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -54,6 +58,11 @@ func AdminAuth(jwtSecret string) gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+		if claims.Role != "admin" {
+			c.JSON(http.StatusForbidden, gin.H{"status": false, "message": "Admin access required"})
+			c.Abort()
+			return
+		}
 		c.Set("admin_email", claims.Email)
 		c.Set("admin_id", claims.ID)
 		c.Next()
@@ -71,6 +80,11 @@ func UserAuth(jwtSecret string) gin.HandlerFunc {
 		claims, err := ValidateToken(tokenStr, jwtSecret)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"status": false, "message": "Invalid token"})
+			c.Abort()
+			return
+		}
+		if claims.Role != "user" {
+			c.JSON(http.StatusForbidden, gin.H{"status": false, "message": "User access required"})
 			c.Abort()
 			return
 		}

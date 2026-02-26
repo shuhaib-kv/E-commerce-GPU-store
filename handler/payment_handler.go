@@ -58,7 +58,7 @@ func (h *PaymentHandler) RazorPay(c *gin.Context) {
 }
 
 func (h *PaymentHandler) RazorpaySuccess(c *gin.Context) {
-	userIDStr := c.Query("user_id")
+	userIDStr := c.GetString("user_id") // from JWT, not query param
 	paymentID := c.Query("payment_id")
 	orderID := c.Query("order_id")
 	signature := c.Query("signature")
