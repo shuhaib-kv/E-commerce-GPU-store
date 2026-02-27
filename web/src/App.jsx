@@ -24,6 +24,11 @@ import Categories from './pages/admin/Categories'
 import AdminOrders from './pages/admin/Orders'
 import Coupons from './pages/admin/Coupons'
 import Discounts from './pages/admin/Discounts'
+import SuperAdminRoute from './components/SuperAdminRoute'
+import SuperAdminSidebar from './components/SuperAdminSidebar'
+import SuperDashboard from './pages/admin/SuperDashboard'
+import ManageAdmins from './pages/admin/ManageAdmins'
+import PlatformStats from './pages/admin/PlatformStats'
 
 function UserLayout() {
   return (
@@ -38,6 +43,17 @@ function AdminLayout() {
   return (
     <div className="flex min-h-screen bg-gray-50">
       <AdminSidebar />
+      <main className="flex-1 p-8 overflow-auto">
+        <Outlet />
+      </main>
+    </div>
+  )
+}
+
+function SuperAdminLayout() {
+  return (
+    <div className="flex min-h-screen bg-gray-50">
+      <SuperAdminSidebar />
       <main className="flex-1 p-8 overflow-auto">
         <Outlet />
       </main>
@@ -73,6 +89,13 @@ export default function App() {
           <Route path="orders" element={<AdminOrders />} />
           <Route path="coupons" element={<Coupons />} />
           <Route path="discounts" element={<Discounts />} />
+        </Route>
+
+        {/* Super Admin routes */}
+        <Route path="/admin/super" element={<SuperAdminRoute><SuperAdminLayout /></SuperAdminRoute>}>
+          <Route path="dashboard" element={<SuperDashboard />} />
+          <Route path="admins" element={<ManageAdmins />} />
+          <Route path="stats" element={<PlatformStats />} />
         </Route>
       </Routes>
     </ErrorBoundary>

@@ -58,7 +58,7 @@ func AdminAuth(jwtSecret string) gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		if claims.Role != "admin" {
+		if claims.Role != "admin" && claims.Role != "superadmin" {
 			c.JSON(http.StatusForbidden, gin.H{"status": false, "message": "Admin access required"})
 			c.Abort()
 			return
@@ -90,6 +90,31 @@ func UserAuth(jwtSecret string) gin.HandlerFunc {
 		}
 		c.Set("user_email", claims.Email)
 		c.Set("user_id", claims.ID)
+		c.Next()
+	}
+}
+
+func SuperAdminAuth(jwtSecret string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		tokenStr, err := c.Cookie("Adminjwt")
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"status": false, "message": "Unauthorized"})
+			c.Abort()
+			return
+		}
+		claims, err := ValidateToken(tokenStr, jwtSecret)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"status": false, "message": "Invalid token"})
+			c.Abort()
+			return
+		}
+		if claims.Role != "superadmin" {
+			c.JSON(http.StatusForbidden, gin.H{"status": false, "message": "Super admin access required"})
+			c.Abort()
+			return
+		}
+		c.Set("admin_email", claims.Email)
+		c.Set("admin_id", claims.ID)
 		c.Next()
 	}
 }

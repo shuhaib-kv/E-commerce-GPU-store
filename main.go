@@ -68,7 +68,7 @@ func main() {
 
 	// Handlers
 	userH := handler.NewUserHandler(userUC, cfg)
-	adminH := handler.NewAdminHandler(adminUC, cfg)
+	adminH := handler.NewAdminHandler(adminUC, orderUC, productUC, cfg)
 	productH := handler.NewProductHandler(productUC)
 	categoryH := handler.NewCategoryHandler(categoryUC, productUC)
 	cartH := handler.NewCartHandler(cartUC)

@@ -47,11 +47,23 @@ func Seed(db *mongo.Database) {
 	now := time.Now()
 
 	// --- Admins ---
+	superAdminID := primitive.NewObjectID()
 	admin1ID := primitive.NewObjectID()
 	admins := []interface{}{
 		bson.M{
-			"_id": admin1ID, "name": "Super Admin",
+			"_id": superAdminID, "name": "Super Admin",
+			"email": "superadmin@gpu.store", "password": hashPassword("superadmin123"),
+			"role": "superadmin", "block_status": false,
+			"store_name": "GPU Store Platform",
+		},
+		bson.M{
+			"_id": admin1ID, "name": "Store Admin",
 			"email": "admin@gpu.store", "password": hashPassword("admin123"),
+			"role": "admin", "block_status": false,
+			"store_name": "GPU Gaming Store",
+			"payment_gateway": bson.M{
+				"provider": "razorpay", "key": "", "secret": "",
+			},
 		},
 	}
 	insertMany(ctx, db, "admins", admins)

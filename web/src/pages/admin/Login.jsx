@@ -18,9 +18,14 @@ export default function AdminLogin() {
     setLoading(true)
     try {
       const res = await api.post('/admin', form)
+      const role = res.data?.data?.role || 'admin'
       toast.success('Login successful')
-      loginAdmin({ email: form.email })
-      navigate('/admin/dashboard')
+      loginAdmin({ email: form.email, role })
+      if (role === 'superadmin') {
+        navigate('/admin/super/dashboard')
+      } else {
+        navigate('/admin/dashboard')
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed')
     } finally {

@@ -23,6 +23,7 @@ func Setup(
 	reviewH *handler.ReviewHandler,
 ) {
 	adminAuth := middleware.AdminAuth(jwtSecret)
+	superAdminAuth := middleware.SuperAdminAuth(jwtSecret)
 	userAuth := middleware.UserAuth(jwtSecret)
 
 	// User auth (no middleware)
@@ -63,7 +64,18 @@ func Setup(
 	// Admin auth (no middleware)
 	r.POST("/admin", adminH.Login)
 	r.POST("/admin/logout", adminH.Logout)
-	r.POST("/admin/signup", adminAuth, adminH.Signup)
+	r.POST("/admin/signup", superAdminAuth, adminH.Signup)
+
+	// Super admin routes
+	superAdmin := r.Group("/admin/manage", superAdminAuth)
+	{
+		superAdmin.GET("/admins", adminH.ListAdmins)
+		superAdmin.GET("/admins/:id", adminH.GetAdmin)
+		superAdmin.PATCH("/admins/:id", adminH.UpdateAdmin)
+		superAdmin.PATCH("/admins/:id/block", adminH.BlockAdmin)
+		superAdmin.PATCH("/admins/:id/unblock", adminH.UnblockAdmin)
+		superAdmin.GET("/stats", adminH.AdminStats)
+	}
 
 	// Admin protected routes
 	admin := r.Group("/admin", adminAuth)
