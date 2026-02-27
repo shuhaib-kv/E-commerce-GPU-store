@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -46,27 +47,36 @@ func Seed(db *mongo.Database) {
 
 	now := time.Now()
 
-	// --- Admins ---
-	superAdminID := primitive.NewObjectID()
-	admin1ID := primitive.NewObjectID()
-	admins := []interface{}{
-		bson.M{
-			"_id": superAdminID, "name": "Super Admin",
-			"email": "superadmin@gpu.store", "password": hashPassword("superadmin123"),
+	// --- Super Admins (from env vars) ---
+	type superAdminEnv struct {
+		emailKey    string
+		passwordKey string
+		name        string
+	}
+	superAdmins := []superAdminEnv{
+		{"SUPER_ADMIN_1_EMAIL", "SUPER_ADMIN_1_PASSWORD", "Super Admin 1"},
+		{"SUPER_ADMIN_2_EMAIL", "SUPER_ADMIN_2_PASSWORD", "Super Admin 2"},
+		{"SUPER_ADMIN_3_EMAIL", "SUPER_ADMIN_3_PASSWORD", "Super Admin 3"},
+	}
+
+	admins := []interface{}{}
+	for _, sa := range superAdmins {
+		email := os.Getenv(sa.emailKey)
+		password := os.Getenv(sa.passwordKey)
+		if email == "" || password == "" {
+			log.Printf("[SEED] Skipping %s: env vars %s / %s not set", sa.name, sa.emailKey, sa.passwordKey)
+			continue
+		}
+		admins = append(admins, bson.M{
+			"_id": primitive.NewObjectID(), "name": sa.name,
+			"email": email, "password": hashPassword(password),
 			"role": "superadmin", "block_status": false,
 			"store_name": "GPU Store Platform",
-		},
-		bson.M{
-			"_id": admin1ID, "name": "Store Admin",
-			"email": "admin@gpu.store", "password": hashPassword("admin123"),
-			"role": "admin", "block_status": false,
-			"store_name": "GPU Gaming Store",
-			"payment_gateway": bson.M{
-				"provider": "razorpay", "key": "", "secret": "",
-			},
-		},
+		})
 	}
-	insertMany(ctx, db, "admins", admins)
+	if len(admins) > 0 {
+		insertMany(ctx, db, "admins", admins)
+	}
 
 	// --- Categories ---
 	catGaming := primitive.NewObjectID()
@@ -345,12 +355,18 @@ func Seed(db *mongo.Database) {
 	fmt.Println("[SEED] All collections seeded successfully.")
 	fmt.Println("")
 	fmt.Println("  Test Accounts:")
-	fmt.Println("  ┌──────────────────────────────────────────────────┐")
-	fmt.Println("  │ Admin:  admin@gpu.store     / admin123           │")
-	fmt.Println("  │ User:   john@example.com    / password123        │")
-	fmt.Println("  │ User:   jane@example.com    / password123        │")
-	fmt.Println("  │ User:   bob@example.com     / password123 (blocked) │")
-	fmt.Println("  └──────────────────────────────────────────────────┘")
+	fmt.Println("  ┌─────────────────────────────────────────────────────────┐")
+	for _, sa := range superAdmins {
+		email := os.Getenv(sa.emailKey)
+		if email != "" {
+			fmt.Printf("  │ SuperAdmin: %-30s (from env)  │\n", email)
+		}
+	}
+	fmt.Println("  │ User:  john@example.com    / password123              │")
+	fmt.Println("  │ User:  jane@example.com    / password123              │")
+	fmt.Println("  │ User:  bob@example.com     / password123 (blocked)    │")
+	fmt.Println("  └─────────────────────────────────────────────────────────┘")
+	fmt.Println("  Note: Admins are created by Super Admins via the UI.")
 }
 
 func insertMany(ctx context.Context, db *mongo.Database, collection string, docs []interface{}) {
